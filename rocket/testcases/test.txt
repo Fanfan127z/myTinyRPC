@@ -13,3 +13,15 @@
 git add .
 git commit -m "commit message"
 git push origin master
+
+如果您想取消最近的本地提交，可以使用以下命令：
+
+git reset HEAD~1
+这将取消最近的提交并将更改还原到上一个提交。如果您想完全删除最近的提交并将更改还原到上一个提交，请使用以下命令：
+
+git reset --hard HEAD~1
+请注意，这将永久删除最近的提交并且无法恢复。因此，请确保在执行此操作之前备份您的更改。
+
+这些都可以再gpt上询问到！
+
+g++ test_log.cpp -L. -lrocket -o test_log
