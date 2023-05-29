@@ -1,0 +1,15 @@
+使用静态库来编译源文件并构成可执行文件的步骤如下：
+
+编写源文件，例如test.c。
+
+编译静态库，例如libtest.a，命令为：gcc -c test.c -o test.o，ar rcs libtest.a test.o。
+
+编写主程序，例如main.c。
+
+编译主程序并链接静态库，命令为：gcc main.c -L. -ltest -o main。
+
+其中-L.表示在当前目录下查找库文件，-ltest表示链接libtest.a库文件。最终生成的可执行文件为main。
+
+git add .
+git commit -m "commit message"
+git push origin master
