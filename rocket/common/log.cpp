@@ -4,7 +4,7 @@
 #include <cstring>
 #include <sys/time.h> // 获取时间
 #include <time.h>
-#include <sstream>    // 使用ssream对象,用于进行字符串流的输入输出操作
+#include <sstream>    // 使用sstream对象,用于进行字符串流的输入输出操作
 
 #include "log.h"
 #include "util.h"
@@ -12,8 +12,8 @@
 
 namespace rocket{
 
-    static Logger* g_logger = nullptr;// 这样会lead to memory leakage
-    // std::shared_ptr<Logger> g_logger = nullptr;
+    // static Logger* g_logger = nullptr;// 这样会lead to memory leakage
+    static std::shared_ptr<Logger> g_logger = nullptr;
 
     std::string LogLevel2String(const LogLevel& logLevel){
         std::string ret;
@@ -69,8 +69,8 @@ namespace rocket{
         std::stringstream ss;
         ss << "[" << LogLevel2String(this->m_log_level) << "]\t"
            << "[" << time_str << "]\t"
-           << "[" << this->m_pid << ":" << this->m_thread_id << "]\t"
-           << "[" << std::string(__FILE__) << ":" <<  __LINE__ << "]\t";
+           << "[" << this->m_pid << ":" << this->m_thread_id << "]\t";
+        //    << "[" << std::string(__FILE__) << ":" <<  __LINE__ << "]\t";
         
         return ss.str();
     }
@@ -89,18 +89,21 @@ namespace rocket{
         lock.unlock();// 其实你自己不手动解锁也是一样的，因为这里退出函数之后肯定会 析构自动调用unlock的！
         // m_mutex.unlock();
     }
-    Logger* Logger::GetGlobalLogger(){// static
+    // Logger* Logger::GetGlobalLogger(){// static
+    std::shared_ptr<Logger> Logger::GetGlobalLogger(){// static
         return g_logger;
     }
     void Logger::InitGlobalLogger(){// static
-        // std::shared_ptr<Logger>& Logger::GetGlobalLogger(){
+        
         // if(g_logger != nullptr)return g_logger;// 不是空，直接返回
         // 是空的话，那就new 一个Logger日志器
-        // g_logger = std::make_shared<Logger>();
+        
         LogLevel global_log_level = String2LogLevel(Config::GetGlobalConfig()->getLogLevel());
         printf("Init log level [%s]\n", LogLevel2String(global_log_level).c_str());
-        // printf("global_log_level is  [%d]\n", global_log_level);
-        g_logger = new Logger(global_log_level);
+        // printf("global_log_level is  [%d]\n", global_log_level);// test codes!
+        
+        // g_logger = new Logger(global_log_level);
+        g_logger = std::make_shared<Logger>(global_log_level);
 
     }
     void Logger::log(){
@@ -118,7 +121,9 @@ namespace rocket{
             std::string msg = m_buffers.front();
             m_buffers.pop();
             // printf("void Logger::log():%s\n",msg.c_str()); // 这只是一个test codes，后面肯定不是在终端打印这个，而是在日志文件中打印这个！
-            printf("%s",msg.c_str());
+            printf("%s",msg.c_str());// 现在是测试阶段，所以只是简单的打印到终端
+            // 后面肯定是要实现打印到具体的.log日志文件并滚动打印的！（也即当日志太大了就需要换一个日志文件继续打印了！）
+            // 而且，后续我也会改进这个log日志模块，把他改成异步的，启动别的子线程去专门定时打印日志的这样的功能！
         }
         lock.unlock();
         // m_mutex.unlock();// 我试过了，直接用m_mutex也是ok的哈！

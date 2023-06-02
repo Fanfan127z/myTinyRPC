@@ -44,3 +44,6 @@ g++ test_log.cpp -L. -lrocket -L/usr/lib -ltinyxml -o test_log -lpthread
 g++  test_log.cpp -L. -lrocket -L/usr/lib -ltinyxml -lpthread -o test_log
 
 
+git add .
+git commit -m "commit message"
+git push origin dev-fanfan

@@ -120,8 +120,8 @@ namespace rocket{
         inline LogLevel getLogLevel()const { return m_set_log_level; }
         void pushLog(const std::string& msg);
 
-        static Logger* GetGlobalLogger();// 会lead to memory leakage
-        // static std::shared_ptr<Logger>& GetGlobalLogger();// 我自己改进的版本！
+        // static Logger* GetGlobalLogger();// 会lead to memory leakage
+        static std::shared_ptr<Logger> GetGlobalLogger();// 我自己改进的版本！
         
         static void InitGlobalLogger();
         void log();
