@@ -24,4 +24,23 @@ git reset --hard HEAD~1
 
 这些都可以再gpt上询问到！
 
-g++ test_log.cpp -L. -lrocket -o test_log
+g++ test_log.cpp -L. -lrocket -o test_log -lpthread
+
+
+您可以使用以下命令行来使用g++结合动态库来编译可执行文件：
+
+bash
+g++ -o executable_file source_file.cpp -L/path/to/library -llibrary_name
+其中，executable_file是您要生成的可执行文件的名称，source_file.cpp是您的源代码文件的名称，/path/to/library是动态库文件所在的路径，library_name是动态库文件的名称。
+
+例如，如果您的源代码文件名为main.cpp，动态库文件名为libexample.so，动态库文件所在路径为/usr/local/lib，您可以使用以下命令行来编译可执行文件：
+
+bash
+g++ -o my_program main.cpp -L/usr/local/lib -lexample
+
+g++ test_log.cpp -L. -lrocket -L/usr/lib -ltinyxml -o test_log -lpthread
+
+# 可以成功把libtinyxml.a和librocket.a结合起来一起编译的代码！
+g++  test_log.cpp -L. -lrocket -L/usr/lib -ltinyxml -lpthread -o test_log
+
+
