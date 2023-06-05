@@ -1,0 +1,59 @@
+对于程序员的网络编程来说，只需要关注那3个半的问题！
+1-连接的建立
+2-连接的断开
+3-消息的到达
+3.5-消息发送完毕 ,剩下的0.5是由于操作系统内核空间决定啥时候通过网卡发送数据包到别的主机了
+
+
+int listenfd = socket();
+bind(listenfd, addr, sizeof(addr));// addr含有当前服务器端本地的ip地址和port端口号
+
+listen(listenfd);
+int epfd = epoll_create(0);
+epoll_ctl(epfd, EPOLL_CTL_ADD, listenfd);// acceptor
+
+while(1){// 事件循环
+    struct epoll_event events[1024];
+    // 比如说，一次epoll_wait调用发现有1w个事件都就绪了，但我们不想一次过或者不能一次过处理1w个就绪事件的
+    // 读写/别的操作，那么久只需要传一个参数，说明一下当前一次的epoll_wait你想处理1024个就绪的事件
+    // 那么这次epoll_wait的调用就只会返回1024个就绪事件给到你去do后续的业务处理！
+
+    int nevents = epoll_wait(epfd, events, 1024, -1);// 数据准备阶段
+    for(int i = 0;i < nevents;++i){
+        epoll_event * e = events[i];// 取到有事件发生的连接
+        if(e->data.fd == listenfd){
+            // 处理建立连接 的流程
+            // fd = socket()
+            epoll_ctl(epfd, EPOLL_CTL_ADD, fd);
+        }else {
+            if(e->events & EPOLLIN){
+                // 数据的到达，可读事件
+                // 也有可能是收到FIN包，然后标识客户端主动断开连接
+                read(e->data.fd, buff);
+                if(buff == FIN 包){
+                    close(fd);
+                    return ;
+                }
+                decode();// 拿出所需数据（从字符串buff中并转换为对应的真实类型的数据）
+                compute();// 业务逻辑等的计算操作
+                encode();// // 把处理过后的数据转换为对应的buff字符串
+            }
+            if(e->events & EPOLLOUT){
+                //  数据的发送完毕，可写事件
+                write(e->data.fd, buff, size);
+            }
+            if(e->events & EPOLLERR){
+                // 错误事件
+                // close 连接断开
+                close(fd);
+                return ;
+            }
+        }
+    }
+}
+LT:level-triggered,水平触发，默认。epoll_wait检测到就绪事件之后，如果该事件没被处理完成
+后续每次调用epoll_wait调用都会返回该事件（只要准备就绪），没处理完就给你一直返回，让你去处理！
+所以说水平触发的话处理的时候会更加安全！
+ET:Edge-triggered，边缘触发。epoll_wait检测到事件只会，只会在当次返回该事件
+（也即只会返回一次这个事件），后续不管该事件是否被处理完毕都不会再返回了！
+
