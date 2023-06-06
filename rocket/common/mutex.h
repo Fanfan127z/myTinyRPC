@@ -4,13 +4,14 @@
 // #include <assert.h>
 // #include <iostream>
 
+// 类似于C++11引入的std::lock_guard一样！避免了手动管理锁的复杂性，因此可以减少死锁和资源泄漏的风险
 template<class T>
 class ScopeMutex{
 private:
     T m_mutex;
     bool m_is_lock {false};
 public:
-    ScopeMutex(const T& mutex):m_mutex(mutex){
+    explicit ScopeMutex(const T& mutex):m_mutex(mutex){
         m_is_lock = {true};// 构造时就顺便加锁
         m_mutex.lock();
     }

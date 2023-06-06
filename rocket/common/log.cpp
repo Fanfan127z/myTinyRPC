@@ -84,10 +84,8 @@ namespace rocket{
 
     void Logger::pushLog(const std::string& msg){
         ScopeMutex<Mutex> lock(this->m_mutex);
-        // m_mutex.lock();// 我试过了，直接用m_mutex也是ok的哈！
         m_buffers.push(msg);
-        lock.unlock();// 其实你自己不手动解锁也是一样的，因为这里退出函数之后肯定会 析构自动调用unlock的！
-        // m_mutex.unlock();
+        // lock.unlock();// 其实你自己不手动解锁也是一样的，因为这里退出函数之后肯定会 析构自动调用unlock的！
     }
     // Logger* Logger::GetGlobalLogger(){// static
     std::shared_ptr<Logger> Logger::GetGlobalLogger(){// static
@@ -107,13 +105,10 @@ namespace rocket{
 
     }
     void Logger::log(){
-        ScopeMutex<Mutex> lock(this->m_mutex);// 为什么不直接用 m_mutex.lock 和 unlock呢？
-        // 其实，我觉得，没必要搞这个scopemutex呀！后面写完all codes后可以尝试看看能不能不要封装成scopemutex
-        // 直接用mutex 看看ok不！
-
+        ScopeMutex<Mutex> lock(this->m_mutex);
+        // 为什么不直接用 m_mutex.lock 和 unlock呢？因为这次复合RAII
         // 我试过了，直接用m_mutex也是ok的哈！
 
-        // m_mutex.lock();
         // std::queue<std::string> tmp_buffers = this->m_buffers;// 这样子搞会出现因为共享buffer在子线程和主线程中因为
         // 所用栈区都是独立的，因此看到的内容是不一样的！从而会导致出某些log重复打印的bugs！so 不要这么干！
         // 不要迷信权威，不要只是迷信大佬的代码！一定要思考，为什么大佬要这么干！！！
@@ -125,7 +120,6 @@ namespace rocket{
             // 后面肯定是要实现打印到具体的.log日志文件并滚动打印的！（也即当日志太大了就需要换一个日志文件继续打印了！）
             // 而且，后续我也会改进这个log日志模块，把他改成异步的，启动别的子线程去专门定时打印日志的这样的功能！
         }
-        lock.unlock();
-        // m_mutex.unlock();// 我试过了，直接用m_mutex也是ok的哈！
+        // lock.unlock();
     }
 }// rocket

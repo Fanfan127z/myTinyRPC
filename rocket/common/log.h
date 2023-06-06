@@ -25,6 +25,7 @@ namespace rocket{
     { \
         rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Debug).toString() \
         + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+        rocket::Logger::GetGlobalLogger()->log(); \
     } \
 
     #define INFOLOG(str, ...)\
@@ -32,6 +33,7 @@ namespace rocket{
     { \
         rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Info).toString() \
         + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+        rocket::Logger::GetGlobalLogger()->log(); \
     } \
 
     #define ERRORLOG(str, ...)\
@@ -39,6 +41,7 @@ namespace rocket{
     { \
         rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Error).toString() \
         + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+        rocket::Logger::GetGlobalLogger()->log(); \
     } \
 
     /* 
