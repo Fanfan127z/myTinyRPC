@@ -44,6 +44,11 @@ g++ test_log.cpp -L. -lrocket -L/usr/lib -ltinyxml -o test_log -lpthread
 g++  test_log.cpp -L. -lrocket -L/usr/lib -ltinyxml -lpthread -o test_log
 
 
+
+提交代码的git命令:
 git add .
 git commit -m "commit message"
 git push origin dev-fanfan
+
+撤销git commmit 提交到本地版本控制库代码的命令：
+git reset HEAD~1

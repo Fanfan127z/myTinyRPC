@@ -1,7 +1,9 @@
-#include<iostream>
+#include <iostream>
 #include <stdio.h>
 #include <sys/time.h>
+#include <functional>
 #include <sstream>
+#include <queue>
 #include <time.h>
 using namespace std;
 // 用于格式化字符串。它使用了可变参数模板，可以接受任意数量和类型的参数。函数首先使用snprintf函数计算格式化后的字符串长度，然后创建一个字符串对象，并调整其大小以适应格式化后的字符串。最后，
@@ -18,9 +20,46 @@ std::string formatString(const char* str, Args&& ... args){
 }
 
 
-void func();
+void func1(){
+    printf("func1 called\n");
+}
+void func2(){
+    printf("func2 called\n");
+}
+void func3(){
+    printf("func3 called\n");
+}
+void print(std::queue<std::function<void ()>>& p){
+    if(!p.empty()){
+        printf("p != empty\n");
+        while(!p.empty()){
+            p.front()();p.pop();
+        }
+    }
+}
 int main(){
-    func();
+    // func();
+    std::queue<std::function<void ()>>m_pending_task;
+    m_pending_task.push(func1);
+    m_pending_task.push(func2);
+    m_pending_task.push(func3);
+
+    // printf("before swap:-----------\n");
+    // print(m_pending_task);
+    // m_pending_task.push(func1);
+    // m_pending_task.push(func2);
+    // m_pending_task.push(func3);
+    std::queue<std::function<void ()>> tmp_tasks;
+    m_pending_task.swap(tmp_tasks);
+    while(!m_pending_task.empty()){
+        printf("m_pending_task != empty\n");
+        m_pending_task.front()();m_pending_task.pop();
+    }
+    printf("after swap:-----------\n");
+    printf("tmp_tasks:-----------\n");
+    print(tmp_tasks);
+    printf("m_pending_task:-----------\n");
+    print(m_pending_task);
     // std::string name = "linzhuofan";
     // auto ret = formatString("Name is : [%s]",name.c_str());
     // std::string str2 = "test log %s\n";
