@@ -18,6 +18,7 @@
 #include "../common/util.h"     // 使用 常规函数 模块
 #include "../common/mutex.h"    // 使用 互斥锁 模块，确保线程操作共享数据的安全
 #include "../net/fdevent.h"    // 使用 fd 模块
+#include "../net/wakeup_fd_event.h"    // 使用 wakeup_fd_event 模块
 
 namespace rocket {
     
@@ -35,6 +36,7 @@ private:
     
     std::queue<std::function<void()>> m_pending_task;// 等待被执行的任务队列,任务队列里面存放的是任务函数，参数是空，返回值是void
 
+    WakeUpFdEvent* m_wakeup_fd_event = nullptr;
 
     int m_wakeup_fd;                // 操作 唤醒任务do事情的fd！
 public:
@@ -55,6 +57,7 @@ public:
     ~EventLoop();
 private:
     void dealWakeUp();              // 处理wakeup的函数
+    void initWakeUpFdEvent();
 };  
 
 }

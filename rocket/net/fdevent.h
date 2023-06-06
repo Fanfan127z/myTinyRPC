@@ -11,16 +11,17 @@ public:
         IN_EVENT = EPOLLIN,
         OUT_EVENT = EPOLLOUT,
     };
-    FdEvent(int fd):m_fd(fd){}
-    FdEvent(TriggerEvent event_type);
-    void handler(TriggerEvent event_type);
+    FdEvent(int fd);
+    // FdEvent(TriggerEvent event_type);
+    std::function<void()> handler(TriggerEvent event_type);
     void listen(TriggerEvent event_type, const std::function<void()>& callback);
     
     inline int getFd() const { return m_fd; }
     inline struct epoll_event getEpollEvent(){ return m_listen_events; }
     ~FdEvent();
 
-private:
+protected:
+// private:
     int m_fd {-1};
     struct epoll_event m_listen_events;         // 监听的事件
     std::function<void()> m_read_callback;      // 读回调函数
