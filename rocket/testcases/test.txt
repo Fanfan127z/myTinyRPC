@@ -52,3 +52,6 @@ git push origin dev-fanfan
 
 撤销git commmit 提交到本地版本控制库代码的命令：
 git reset HEAD~1
+
+TODO:一定要把 加了定时器Timer模块相关的代码，结合EpollLoop模块的代码，整体看一下，捋一下逻辑和函数调用！
+（屡明白了函数调用的各种方法之后，再往下走，不然我会蒙b的！）

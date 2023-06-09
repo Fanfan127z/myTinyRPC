@@ -9,7 +9,10 @@
 #include <fcntl.h>
 #include <error.h>
 #include <memory>
+
 #include "../net/eventloop.h"
+#include "../net/timer.h"
+#include "../net/timer_event.h"
 #include "../common/log.h"
 #include "../common/util.h"
 #include "../common/config.h"
@@ -70,6 +73,19 @@ int main(void){
         DEBUGLOG("success get client connection [ip:port] = [%s:%d]", IP, Port);
     };
     event.listen(rocket::FdEvent::TriggerEvent::IN_EVENT, readable_task_cb);
+
+    /* test timer
+     TimerEvent(int64_t interval, bool is_repeated 
+                // , const std::function<void()>& task);
+    */
+    int ii = 0;
+    auto timer_task = [&ii](){
+        INFOLOG("trigger timer event, count ii = [%d]", ii++);
+    };
+    rocket::TimerEvent::s_ptr timer_event = std::make_shared<rocket::TimerEvent>(
+        1000, true, timer_task
+    );// 定义每秒钟执行一次的任务
+    eventloop->addTimerEvent(timer_event);
 
     eventloop->addEpollEvent(&event);
     eventloop->loop();// 开启loop循环
