@@ -12,8 +12,9 @@
     int ret = epoll_ctl(m_epoll_fd, op, event->getFd(), &tmp_ev);\
     if(ret == -1){\
         ERRORLOG("failed to epoll_ctl when add fd [%d], error = [%d], error info:[%s]", event->getFd(), errno, strerror(errno));\
+    }else{\
+        DEBUGLOG("add epoll event success, fd = [%d]", event->getFd());\
     }\
-    else DEBUGLOG("add epoll event success, fd = [%d]", event->getFd());\
 
 // 视频的大佬教的时候写为DELETE_TO_EPOLL()了，我觉得他老是忘记这些细枝末节，但是问题不大！
 
@@ -27,8 +28,9 @@
     int ret = epoll_ctl(m_epoll_fd, op, event->getFd(), &tmp_ev);\
     if(ret == -1){\
         ERRORLOG("failed to epoll_ctl when delete fd [%d], error = [%d], error info:[%s]", event->getFd(), errno, strerror(errno));\
+    }else{\
+        DEBUGLOG("delete epoll event success, fd = [%d]", event->getFd());\
     }\
-    else DEBUGLOG("delete epoll event success, fd = [%d]", event->getFd());\
 
 
 // 最后项目差不多做好的时候再把各种日志的打印都规范化一下，学一下SRS那个log！
@@ -74,7 +76,7 @@ void EventLoop::addTimerEvent(TimerEvent::s_ptr event){   // 添加定时任务
 
 void EventLoop::initWakeUpFdEvent(){
     /*  
-        int eventfd(unsigned int __count, int __flags):
+        int eventfd(unsigned int __initval, int __flags):
         initval参数是eventfd对象的初始值;
         flags参数用于设置eventfd对象的行为;
         在这个例子中，我们将initval设置为0，flags设置为EFD_NONBLOCK，表示创建一个 非阻塞的 初始值为0的 eventfd。
@@ -87,15 +89,15 @@ void EventLoop::initWakeUpFdEvent(){
 
     m_wakeup_fd_event = new WakeUpFdEvent(m_wakeup_fd);
     // 实际上，我们只关心wakeup的可读事件！
-    auto m_read_callback = [this](){
+    auto read_callback = [this](){
         char buf[8];
         memset(buf, 0, sizeof(buf));// 初始化
         while(read(m_wakeup_fd, buf, 8) != -1 && errno != EAGAIN ){
-            // 只要读buffer不出错 且 没有读完的话就继续读
+            // 只要read读buffer不出错 且 没有读完的话就继续读
         }
         DEBUGLOG("read full bytes from wakeup fd[%d]", m_wakeup_fd);
     };
-    m_wakeup_fd_event->listen(FdEvent::TriggerEvent::IN_EVENT, m_read_callback);
+    m_wakeup_fd_event->listen(FdEvent::TriggerEvent::IN_EVENT, read_callback);
     addEpollEvent(m_wakeup_fd_event);// 这里面已经do了下面注释部分的工作了！
     // struct epoll_event event;
     //  // 检测 m_wakeup_fd 的读缓冲区 是否有数据
@@ -111,19 +113,19 @@ void EventLoop::loop(){// 循环调用epoll_wait（RPC服务的主函数程序�
     while(!m_stop_flag){
         // 先拿出任务队列 中的 任务们
         ScopeMutex<Mutex> lock(m_mutex);
-        // TODO: 其实下面这2行代码可以直接省略，然后后面while(!m_pending_task.empty())... lock.unlock();
+        // TODO: 其实下面这2行代码可以直接省略，然后后面while(!m_pending_tasks.empty())... lock.unlock();
         //       这样子写也是ok的！但大佬这么写应该有大佬自己的原因！反转效果的话这2种写法都是一样的！但上面那种更加好理解！
         std::queue<std::function<void ()>> tmp_tasks;
-        m_pending_task.swap(tmp_tasks);
-        // TODO: 这就相当于是用tmp_tasks代替m_pending_task来do任务函数出队列的操作
+        m_pending_tasks.swap(tmp_tasks);
+        // TODO: 这就相当于是用tmp_tasks代替m_pending_tasks来do任务函数出队列的操作
         //       这样子do可以更加让我们写粒度更加低, 一定程度上增加了程序运行的效率！
-        // 同时，此时m_pending_task就会给clear掉！相当于此时tmp_tasks是原来的m_pending_task
-        // m_pending_task == 空！
-        // 这里为啥要这样子呢，没搞懂，这样子tmp_task和m_pending_task都是一样的啊，为什么要swap呢？
+        // 同时，此时m_pending_tasks就会给clear掉！相当于此时tmp_tasks是原来的m_pending_tasks
+        // m_pending_tasks == 空！
+        // 这里为啥要这样子呢，没搞懂，这样子tmp_task和m_pending_tasks都是一样的啊，为什么要swap呢？
         
         lock.unlock();
          /*TODO:  疑问：可是如果我加上互斥锁这个问题不就不会出现了吗？为什么还要swap呢？
-            是的，如果你在执行任务的过程中使用互斥锁保护m_pending_task队列，
+            是的，如果你在执行任务的过程中使用互斥锁保护m_pending_tasks队列，
             确实可以避免新任务在执行过程中被加入到队列中。这样，你可以确保在执行任务时，队列中的任务不会发生变化，从而避免了意外的行为。
             然而，使用swap的方法仍然具有一定的优势。首先，它可以减少锁的持有时间，因为在执行任务时不需要持有锁。这样可以提高程序的并发性能。其次，使用swap方法可以确保在执行任务过程中，新加入的任务不会立即被执行，
             而是等待下一轮执行。这有助于控制任务的执行顺序和节奏。
@@ -161,12 +163,36 @@ void EventLoop::loop(){// 循环调用epoll_wait（RPC服务的主函数程序�
         DEBUGLOG("now end epoll wait");
 
         if(num < 0){// num : epoll_wait返回的是就绪事件个数
+            /*
+            本来num小于0时应该这样do的，但是我当前是自己server本身的代码写死了自己触发自己的rpc主流程的
+            所以无需这么写！
+             if(errno == EAGAIN){
+                 printf("数据读完了...\n");
+                 break;
+             }else{
+                 perror("recv error");
+                 exit(0);
+             }
+             
+             */
             ERRORLOG("failed to loop, epoll_wait error, error = [%d], error info:[%s]", errno, strerror(errno));// 打印error日志
             exit(0);// 异常，提前退出程序！
         }else {// epoll_wait调用成功
+            /*
+            本来num==0时应该这样do的，，但是我当前是自己server本身的代码写死了自己触发自己的rpc主流程的
+            所以无需这么写！
+            if(num == 0){
+                    // 非阻塞模型下和阻塞模型是一样的--》判断对方是否断开连接
+                    printf("client 断开了连接...\n");
+                    // 将这个文件描述符从epoll模型中删除
+                    epoll_ctl(epfd, EPOLL_CTL_DEL, curfd, nullptr);
+                    close(curfd);
+                    break;
+                }
+            */
             if(num > 0){
                 for(int i=0;i < num;++i){
-                    struct epoll_event trigger_event = result_events[i];// 取出触发的事件
+                    struct epoll_event trigger_event = result_events[i];// 取出当前被触发的事件
                     FdEvent* fd_event = static_cast<rocket::FdEvent *>(trigger_event.data.ptr);
                     if(fd_event == nullptr)continue;// 没法处理
                     if(trigger_event.events & EPOLLIN){// 如果是 触发 可读事件的话
@@ -196,7 +222,8 @@ void EventLoop::stop(){
 bool EventLoop::isInLoopThread() const{  
     return m_thread_id == getThreadId();
 }   
-void EventLoop::addEpollEvent(FdEvent * event){
+// 每添加进来一个FdEvent，就（超时之前）成功唤醒EpollLoop检测到一个可读/写事情，并执行对应这个任务回调函数！
+void EventLoop::addEpollEvent(FdEvent * event){ 
     if(isInLoopThread()){
         ADD_TO_EPOLL();// 直接封装为一个 宏 了！
         // 判断出是当前线程就是直接添加epoll event就ok
@@ -235,7 +262,7 @@ void EventLoop::addEpollEvent(FdEvent * event){
 }
 void EventLoop::addTask(const std::function<void()>& cb, bool is_wake_up /* = false*/){
     ScopeMutex<Mutex> lock(m_mutex);
-    m_pending_task.push(cb);
+    m_pending_tasks.push(cb);
     lock.unlock();
     if(is_wake_up){
         wakeup();

@@ -44,7 +44,7 @@ void Timer::resetArriveTime(){
     if(( it->second->getArriveTime() > now )){
         interval = it->second->getArriveTime() - now;// 到达时间-当前时间才是时间间隔
     } else {
-        // 这个任务超时了都没有给执行，就等100ms就 马上触发可读事件 进而去执行下一个任务！
+        // 这个任务超时了都没有给执行，就等100ms 就 马上触发可读事件 进而去执行下一个任务！
         interval = 100;
     }
     struct timespec ts;
@@ -60,7 +60,8 @@ void Timer::resetArriveTime(){
         ERRORLOG("timerfd_settime error, error = [%d], error info = [%s]", errno, strerror(errno));
     }
     DEBUGLOG("success reset timer arrivetime to [%lld:%s]", now + interval
-    , origin13bitTimeStamp2RealTimeForMat(now + interval).c_str());// 打印一下新set的到达执行任务的时间 = now + interval
+    , origin13bitTimeStamp2RealTimeForMat(now + interval).c_str());
+    // 打印一下新set的到达执行任务的时间 = now + interval
     // 此时如果set时间成功的话，那么我们的m_fd就会在这个指定的时间内去触发 读事件！
     // 触发之后EventLoop中的epoll_wait就能够监听到了！
 }

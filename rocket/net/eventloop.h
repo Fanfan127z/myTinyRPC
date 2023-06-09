@@ -23,8 +23,7 @@
 namespace rocket {
     
 /* 
-    使用Reactor模式的类
-
+    使用Reactor模式的并使用epoll这种IO多路复用技术的类
 */
 class EventLoop{
 private:
@@ -34,15 +33,17 @@ private:
     bool m_stop_flag = {false};     // loop暂停标志
     Mutex m_mutex;                  // 确保线程操作共享数据安全
     
-    std::queue<std::function<void()>> m_pending_task;// 等待被执行的任务队列,任务队列里面存放的是任务函数，参数是空，返回值是void
+    std::queue<std::function<void()>> m_pending_tasks;// 等待被执行的任务队列,任务队列里面存放的是任务函数，参数是空，返回值是void
 
     WakeUpFdEvent* m_wakeup_fd_event {nullptr};
 
     int m_wakeup_fd;                // 操作 唤醒任务do事情的fd！
 
-    Timer* m_timer {nullptr};       // 定时器，定时指向任务回调函数
+    Timer* m_timer {nullptr};       // 定时器，定时执行 任务回调函数
+
 public:
     EventLoop();
+
     void loop();                    // 循环调用epoll_wait（RPC服务的主函数程序）
 
     void wakeup();

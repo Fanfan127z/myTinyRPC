@@ -1,17 +1,18 @@
 #include "fdevent.h"  
-#include <string.h>  
+#include <string.h>         // use memset
 #include "../common/log.h"  // 引用日志模块
 
 
 namespace rocket {
 FdEvent::FdEvent(){
-    memset(&m_listen_events, 0 ,sizeof(m_listen_events));
-    // 初始化m_listen_events值,就算用不到也需要你初始化，不初始化就算undefined behavior
+    memset(&m_listen_event, 0 ,sizeof(m_listen_event));
+    // 初始化m_listen_events值,就算用不到也需要你初始化，不初始化就算undefined behavior(Effective C++中提示我要这么干的！)
+    // 读写回调函数都先初始化为 空指针
     m_read_callback = nullptr;
     m_write_callback = nullptr;
 }
 FdEvent::FdEvent(int fd):m_fd(fd){
-    memset(&m_listen_events, 0 ,sizeof(m_listen_events));// 初始化m_listen_events值
+    memset(&m_listen_event, 0 ,sizeof(m_listen_event));// 初始化m_listen_event值, Effective C++中提示我要这么干的！
     m_read_callback = nullptr;
     m_write_callback = nullptr;
 }
@@ -25,15 +26,16 @@ std::function<void()> FdEvent::handler(TriggerEvent event_type){
     }
 }
 void FdEvent::listen(TriggerEvent event_type, const std::function<void()>& callback){
+    // 监听 读事件
     if(event_type == TriggerEvent::IN_EVENT){   // if不知道这里为啥这么封装的话，可以查看我自己的test/test_epoll_server.cpp这个源文件！
-        m_listen_events.events |= EPOLLIN;// 让后续的epoll_wait监听（或者说是）检测对应的m_fd的读缓冲区是否有数据，即检测是否有 读事件触发
+        m_listen_event.events |= EPOLLIN;// 让后续的epoll_wait监听（或者说是）检测对应的m_fd的读缓冲区是否有数据，即检测是否有 读事件触发
         m_read_callback = callback;
-    } else {
-        m_listen_events.events |= EPOLLOUT;// 让后续的epoll_wait监听（或者说是）检测对应的m_fd的写缓冲区是否有数据，即检测是否有 写事件触发
-        m_listen_events.data.fd = getFd();
+    } else {// 监听 写事件
+        m_listen_event.events |= EPOLLOUT;// 让后续的epoll_wait监听（或者说是）检测对应的m_fd的写缓冲区是否有数据，即检测是否有 写事件触发
+        m_listen_event.data.fd = getFd();
         m_write_callback = callback;
     }
-    m_listen_events.data.ptr = this;
+    m_listen_event.data.ptr = this;
 }
 FdEvent::~FdEvent(){
     

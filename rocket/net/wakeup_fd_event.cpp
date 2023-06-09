@@ -35,6 +35,11 @@ WakeUpFdEvent::~WakeUpFdEvent(){
 // }
 void WakeUpFdEvent::wakeup(){// 触发 读事件
     char buf[8] = {'a'};
+    /* 
+        简单write点东西到server程序端，
+        以便于 服务器端,被epoll_wait识别出来fd的读缓冲区可读的时候，就触发返回，do你想do的任务回调函数callbcak
+        其实这本身就是我服务端自己提供的代码，相当于是自己激活自己的意思了！只要你 开一个RPC-server调用，
+        我就自己触发自己去检测触发client要do的任务（执行任务回调函数来达到这个目的）*/
     int ret = write(m_fd, buf, 8);
     if(ret != 8){
         ERRORLOG("failed to wakeup fd less than 8 bytes ,fd = [%d]\n", m_fd);
