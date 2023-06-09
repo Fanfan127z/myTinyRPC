@@ -1,6 +1,6 @@
 #ifndef ROCKET_COMMON_LOG_H
 #define ROCKET_COMMON_LOG_H
-
+#include <cstdio>
 #include <unistd.h>
 #include <cstring>
 #include <string>
@@ -13,53 +13,62 @@
 namespace rocket{
     // 注：__VA_ARGS__是C语言中的可变参数宏，它允许宏接受可变数量的参数。
 
-    // #define DEBUGLOG(str, ...)\
-    //     if( rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::LogLevel::Debug)\
-    //     {\
-    //         rocket::Logger::GetGlobalLogger()->pushLog( ((new rocket::LogEvent(rocket::LogLevel::Debug))->toString() + rocket::formatString(str, ##__VA_ARGS__)) + "\n"); \
-    //         rocket::Logger::GetGlobalLogger()->log(); \
-    //     }\
 
-    #define DEBUGLOG(str, ...) \
-    if (rocket::Logger::GetGlobalLogger()->getLogLevel() && rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::LogLevel::Debug) \
-    { \
-        rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Debug).toString() \
+    #define DEBUGLOG(str, ...)\
+    if (rocket::Logger::GetGlobalLogger()->getLogLevel() && rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::LogLevel::Debug)\
+    {\
+        rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Debug).toString()\
         + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
-        rocket::Logger::GetGlobalLogger()->log(); \
-    } \
+        rocket::Logger::GetGlobalLogger()->log();\
+    }\
 
     #define INFOLOG(str, ...)\
-    if (rocket::Logger::GetGlobalLogger()->getLogLevel() && rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::LogLevel::Info) \
-    { \
-        rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Info).toString() \
+    if (rocket::Logger::GetGlobalLogger()->getLogLevel() && rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::LogLevel::Info)\
+    {\
+        rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Info).toString()\
         + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
-        rocket::Logger::GetGlobalLogger()->log(); \
-    } \
+        rocket::Logger::GetGlobalLogger()->log();\
+    }\
 
     #define ERRORLOG(str, ...)\
-    if (rocket::Logger::GetGlobalLogger()->getLogLevel() && rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::LogLevel::Error) \
-    { \
-        rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Error).toString() \
+    if (rocket::Logger::GetGlobalLogger()->getLogLevel() && rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::LogLevel::Error)\
+    {\
+        rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Error).toString()\
         + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
-        rocket::Logger::GetGlobalLogger()->log(); \
-    } \
+        rocket::Logger::GetGlobalLogger()->log();\
+    }\
 
     /* 
         日志字符串格式转换中间函数:
             用于格式化字符串。它使用了可变参数模板，可以接受任意数量和类型的参数。函数首先使用snprintf函数计算格式化后的字符串长度，然后创建一个字符串对象，并调整其大小以适应格式化后的字符串。最后，
             使用snprintf函数将格式化后的字符串写入到字符串对象中，并返回该对象。
     */ 
-    template<class... Args>
-    std::string formatString(const char* str, Args&& ... args){ // 打印日志时，其实就是调用这个formatString方法就ok了！
-        int size = snprintf(nullptr, 0, str, args ...);
-        std::string result;
-        if(size > 0){
-            result.resize(size);
-            snprintf(&result[0], size + 1, str , args...);
-        }
-        return result;
+    // template<class... Args>
+    // std::string formatString(const char* str, Args&& ... args){ // 打印日志时，其实就是调用这个formatString方法就ok了！
+    //     // int size = snprintf(nullptr, 0, str, args ...);
+    //     int size = snprintf(nullptr, 0, "%s", str, args ...);
+
+    //     std::string result;
+    //     if(size > 0){
+    //         result.resize(size);
+    //         snprintf(&result[0], size + 1, "%s", str, args...);
+    //         // snprintf(&result[0], size + 1, str , args...);
+    //     }
+    //     return result;
+    // }
+    template<typename... Args>
+    std::string formatString(const char* str, Args&&... args) {
+
+    int size = snprintf(nullptr, 0, str, args...);
+
+    std::string result;
+    if (size > 0) {
+        result.resize(size);
+        snprintf(&result[0], size + 1, str, args...);
     }
 
+    return result;
+    }
     
 
     /*
