@@ -1,14 +1,14 @@
 
 #include "eventloop.h"
 
-#define ADD_TO_EPOLL() \ 
+#define ADD_TO_EPOLL()\ 
     auto it = m_listen_fds.find(event->getFd());\
     int op = EPOLL_CTL_ADD;\
     if(it != m_listen_fds.end()){\
         op = EPOLL_CTL_MOD;\
     }\
     struct epoll_event tmp_ev = event->getEpollEvent();\
-    INFOLOG("epoll_event.events = [%d]", (int)tmp_ev.events); \ 
+    INFOLOG("epoll_event.events = [%d]", (int)tmp_ev.events);\ 
     int ret = epoll_ctl(m_epoll_fd, op, event->getFd(), &tmp_ev);\
     if(ret == -1){\
         ERRORLOG("failed to epoll_ctl when add fd [%d], error = [%d], error info:[%s]", event->getFd(), errno, strerror(errno));\
@@ -17,12 +17,12 @@
 
 // 视频的大佬教的时候写为DELETE_TO_EPOLL()了，我觉得他老是忘记这些细枝末节，但是问题不大！
 
-#define DELETE_FROM_EPOLL() \
+#define DELETE_FROM_EPOLL()\
      auto it = m_listen_fds.find(event->getFd());\
     if(it == m_listen_fds.end()){\
-        return; \
+        return;\
     }\
-    int op = EPOLL_CTL_DEL; \
+    int op = EPOLL_CTL_DEL;\
     struct epoll_event tmp_ev = event->getEpollEvent();\
     int ret = epoll_ctl(m_epoll_fd, op, event->getFd(), &tmp_ev);\
     if(ret == -1){\
@@ -56,11 +56,22 @@ EventLoop::EventLoop(){
         exit(0);
     }
 
-    initWakeUpFdEvent();
+    initWakeUpFdEvent();// 初始化唤醒事件
 
+    initTimer();// 初始化定时器
+    
     INFOLOG("successfully created event loop in thread [%d]", this->m_thread_id);// 打印info程序运行信息的日志
     t_current_eventloop = this;
 }
+void EventLoop::initTimer(){    // 初始化定时器
+    m_timer = new Timer();      // 创建定时器
+    addEpollEvent(m_timer);     // 把timer fd添加到epoll中！
+}
+void EventLoop::addTimerEvent(TimerEvent::s_ptr event){   // 添加定时任务
+    m_timer->addTimerEvent(event);
+}
+    
+
 void EventLoop::initWakeUpFdEvent(){
     /*  
         int eventfd(unsigned int __count, int __flags):
@@ -80,7 +91,7 @@ void EventLoop::initWakeUpFdEvent(){
         char buf[8];
         memset(buf, 0, sizeof(buf));// 初始化
         while(read(m_wakeup_fd, buf, 8) != -1 && errno != EAGAIN ){
-            // 只要读buffer不出错切没有读完的话就继续读
+            // 只要读buffer不出错 且 没有读完的话就继续读
         }
         DEBUGLOG("read full bytes from wakeup fd[%d]", m_wakeup_fd);
     };
@@ -121,13 +132,22 @@ void EventLoop::loop(){// 循环调用epoll_wait（RPC服务的主函数程序�
         */
        // 执行任务们
         while(!tmp_tasks.empty()){
-            std::function<void()> task = tmp_tasks.front();
+            auto task = tmp_tasks.front();// std::function<void()> task
             tmp_tasks.pop();
             // 下面这一步不执行的话，很容易出事的！！！
             if(task){ // std::function<void()>所封装的 任务函数 入口调用的地址非空，我才执行！
                 task();// 执行 该执行的任务！
             }
         }
+
+        /* 
+            当前需要解决一个问题：
+            如果有定时任务需要执行，那么执行
+            1.如何判断一个定时任务需要执行？（now() > TimeEvent.arrive_time，当前时间大于定时任务的到达时间时就执行）
+            2.arrive_time到达时，这个任务的fd如何被 epoll_wait()监听呢？
+            
+            答：引入定时器模块！
+        */
         // lock.unlock();
         // 1.取得下次定时任务的时间，与设定time_out取最大值，即若下次定时任务时间超过1s就取下次定时任务的时间为超时时间，否则取1s
         // int time_out = max(g_epoll_max_timeout, getNextTimeCallBack());
@@ -249,6 +269,10 @@ EventLoop::~EventLoop(){
     if(m_wakeup_fd_event != nullptr){
         delete m_wakeup_fd_event;
         m_wakeup_fd_event = nullptr;
+    }
+    if(m_timer != nullptr){
+        delete m_timer;
+        m_timer = nullptr;
     }
     // stop();
     close(m_epoll_fd);// 关闭epoll实例对象

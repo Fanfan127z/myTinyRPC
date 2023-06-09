@@ -4,9 +4,16 @@
 
 
 namespace rocket {
-
+FdEvent::FdEvent(){
+    memset(&m_listen_events, 0 ,sizeof(m_listen_events));
+    // 初始化m_listen_events值,就算用不到也需要你初始化，不初始化就算undefined behavior
+    m_read_callback = nullptr;
+    m_write_callback = nullptr;
+}
 FdEvent::FdEvent(int fd):m_fd(fd){
     memset(&m_listen_events, 0 ,sizeof(m_listen_events));// 初始化m_listen_events值
+    m_read_callback = nullptr;
+    m_write_callback = nullptr;
 }
 std::function<void()> FdEvent::handler(TriggerEvent event_type){
     if(event_type == TriggerEvent::IN_EVENT){
