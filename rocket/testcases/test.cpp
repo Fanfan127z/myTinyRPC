@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <sstream>
 #include <queue>
-#include <thread>
+// #include <thread> g++编译的时候要加上 -lpthread参数！
 #include <time.h>
 #include <map> 
 using namespace std;
@@ -63,12 +63,56 @@ void run2(){
     ++g_a;
     print_g_a();
 }
+
+class AA{
+public:
+    static int m_sa;
+    AA(){}
+    int getSA1() const { return m_sa; }
+    static int getSA2() { return m_sa; }
+    ~AA(){}
+};
+int AA::m_sa {0};
+void f(){cout <<"f=666"<<endl;}
+typedef void(*Fptr)();
+enum TimerEventType{
+    NORMAL_TIMER_EVENT, // 正常timerEvent定时任务事件，不重复执行（默认）
+    REPEATABLE_TIMER_EVENT,// 需要被重复执行的timerEvent定时任务事件
+};
 int main(){
-    std::thread t1(run1);
-    t1.join();
-    std::thread t2(run2);
-    t2.join();
-    print_g_a();
+    TimerEventType tt=REPEATABLE_TIMER_EVENT;
+    if(tt==REPEATABLE_TIMER_EVENT){
+        printf("tt==REPEATABLE_TIMER_EVENT\n");
+    }
+
+    // Fptr alias = f;
+    // f();
+    // alias();
+    // int a =110;
+    // cout << "a = "<<a<<",&a = "<<&a<<endl;
+    // int&& ba=std::move(a);
+    // cout << "----------\nba = "<<ba<<",&ba = "<<&ba<<endl;
+    // cout << "a = "<<a<<",&a = "<<&a<<endl;
+    // a=2;
+    //  cout << "a = "<<a<<",&a = "<<&a<<endl;
+    // AA aa;
+    // aa.m_sa += 1;
+    // printf("aa.getSA1()=[%d]\n", aa.getSA1());
+    // printf("aa.getSA2()=[%d]\n", aa.getSA2());
+    // aa.m_sa += 2;
+    // printf("aa.getSA1()=[%d]\n", aa.getSA1());
+    // printf("aa.getSA2()=[%d]\n", aa.getSA2());
+    // aa.m_sa += 3;
+    // printf("aa.getSA1()=[%d]\n", aa.getSA1());
+    // printf("aa.getSA2()=[%d]\n", aa.getSA2());
+    // 接下来我要test一下，是否类中的static对象是属于all类的对象的，都是只有一份的,经过我的test，确实是这样子的！
+
+
+    // std::thread t1(run1);
+    // t1.join();
+    // std::thread t2(run2);
+    // t2.join();
+    // print_g_a();
     // std::multimap<int, int> m_pending_events;
     // m_pending_events.insert({1,123});
     // m_pending_events.insert({2,223});

@@ -20,25 +20,26 @@
 
 int main(void){
 
- 
-    rocket::Config::SetGlobalConfig("../conf/rocket.xml");
-    rocket::Logger::InitGlobalLogger();// 初始化创建全局日志
+    rocket::Config::SetGlobalConfig("../conf/rocket.xml");// 初始化创建全局 配置对象
+
+    rocket::Logger::InitGlobalLogger();// 初始化创建全局 日志对象
 
     rocket::EventLoop* eventloop = new rocket::EventLoop();
     // std::shared_ptr<rocket::EventLoop> eventloop = std::make_shared<rocket::EventLoop>();
+
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if(listenfd == -1){
         ERRORLOG("listenfd == -1, socket error");
         exit(-1);
     }
-    // 绑定
+    // 绑定 server端的 IP 和 Port
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;// IPV4
     serv_addr.sin_port = htons(10001);
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    // 设置端口复用
+    // 设置端口（可被）复用
     int opt = 1;
     setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
@@ -62,17 +63,18 @@ int main(void){
     auto readable_task_cb = [listenfd](){
         struct sockaddr_in peer_client_addr;
         socklen_t client_addr_len = sizeof(peer_client_addr);
-        /* TODO:  if 上面这行代码这里set为 0的话
-            你就根本没法读取出对端客户端的地址值！因为这里面源码是用这个len去读取对应len长的addr的！
-            也即：accept的第3个参数是输入输出参数！除非你根本你关心对端客户端的地址，你才可以传0的len进去！
+        /* TODO:  
+            if 上面这行代码这里set为 0的话
+            你就根本没法读取出对端客户端的地址值！因为这里面accept的源码是用这个len去读取对应len长的addr的！
+            也即：accept的第3个参数是输入输出参数！除非你根本就 不关心 对端客户端的地址，你才可以传0的len进去！
             这个点非常重要！
        */ 
         int cfd = accept(listenfd, (struct sockaddr*)&peer_client_addr, &client_addr_len);
-        const char * IP = inet_ntoa(peer_client_addr.sin_addr);
+        const char * IP = inet_ntoa(peer_client_addr.sin_addr);// 大端网络字节序转换为小端主机字节序
         uint16_t  Port = ntohs(peer_client_addr.sin_port);
         DEBUGLOG("success get client connection [ip:port] = [%s:%d]", IP, Port);
     };
-    event.listen(rocket::FdEvent::TriggerEvent::IN_EVENT, readable_task_cb);
+    event.listen(rocket::FdEvent::TriggerEvent::IN_EVENT, readable_task_cb);// 监听 读事件
 
     /* test timer
      TimerEvent(int64_t interval, bool is_repeated 
@@ -80,7 +82,7 @@ int main(void){
     */
     int ii = 0;
     auto timer_task = [&ii](){
-        INFOLOG("trigger timer event, count ii = [%d]", ii++);
+        INFOLOG("trigger a single-TimerEvent, count ii = [%d]", ii++);
     };
     rocket::TimerEvent::s_ptr timer_event = std::make_shared<rocket::TimerEvent>(
         1000, true, timer_task
