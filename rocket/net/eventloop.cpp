@@ -191,7 +191,7 @@ void EventLoop::loop(){// 循环调用epoll_wait（RPC服务的主函数程序�
                 }
             */
             if(num > 0){
-                for(int i=0;i < num;++i){
+                for(int i = 0;i < num; ++i){
                     struct epoll_event trigger_event = result_events[i];// 取出当前被触发的事件
                     FdEvent* fd_event = static_cast<rocket::FdEvent *>(trigger_event.data.ptr);
                     if(fd_event == nullptr)continue;// 没法处理
@@ -210,7 +210,8 @@ void EventLoop::loop(){// 循环调用epoll_wait（RPC服务的主函数程序�
 }
 
 void EventLoop::wakeup(){
-    m_wakeup_fd_event->wakeup();
+    m_wakeup_fd_event->wakeup();//  m_wakeup_fd_event->wakeup()中随便write点东西给自己这个rpc-server端
+    // 然后在loop的epoll_wait里面就能够循环检测事件，主要检测到有可读事件就执行！
 }
 
 void EventLoop::stop(){

@@ -1,10 +1,10 @@
 #ifndef ROCKET_NET_TIMER_H
 #define ROCKET_NET_TIMER_H
 #include <map> // use multimap
-
+#include <string> // use string
 #include "timer_event.h" // use TimerEvent
 #include "fdevent.h" // use FdEvent
-#include "../common/mutex.h"
+#include "../common/mutex.h" // use mutex
 namespace rocket{
 
 /*
@@ -26,11 +26,13 @@ namespace rocket{
 class Timer : public FdEvent{
 private:
     Mutex m_mutex;
-    std::multimap<int64_t, rocket::TimerEvent::s_ptr> m_pending_events;// : 按照到达时间arrivetime来存储管理我们的TimerEvent， 因为到达时间arrivetime有可能重复（同一个时间执行多个任务），这是复合逻辑的！so不用map来管理！
+    // : 按照到达时间arrivetime来存储管理我们的TimerEvent， 因为到达时间arrivetime有可能重复（同一个时间执行多个任务），这是复合逻辑的！so不用map来管理！
+    std::multimap<int64_t, rocket::TimerEvent::s_ptr> m_pending_events;
+
 public:
     Timer();
     ~Timer();
-
+    
     bool addTimerEvent(const rocket::TimerEvent::s_ptr& event);
     bool deleteTimerEvent(const rocket::TimerEvent::s_ptr& event);
     /*
