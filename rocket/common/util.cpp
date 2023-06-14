@@ -8,16 +8,16 @@ namespace rocket {
 static pid_t g_pid = 0;
 static thread_local int g_thread_id = 0;
 
-pid_t getPid(){ 
+pid_t getPid(){ // 这个代码确实是参考人家写的才能写出来
     if(g_pid != 0)return g_pid;
     return getpid();
 }
-pid_t getThreadId(){ 
+pid_t getThreadId(){ // 这个代码确实是参考人家写的才能写出来
     if(g_thread_id != 0)return g_thread_id;
     return syscall(SYS_gettid);
 }
 
-int64_t getNowMs() {// 获取当前时间(单位是 Ms毫秒)
+int64_t getNowMs() {// 获取当前时间的时间戳(单位是 Ms毫秒)
     struct timeval tv;
     // 使用gettimeofday()获取当前时间，将秒数乘以1000并加上微秒数除以1000，
     // 从而得到毫秒数

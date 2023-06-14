@@ -87,6 +87,9 @@ int main(void){
     rocket::TimerEvent::s_ptr timer_event = std::make_shared<rocket::TimerEvent>(
         1000, true, timer_task
     );// 定义每秒钟执行一次的任务
+    // 具体直接看logs中的
+    // 一个trigger a single-TimerEvent, count ii = [x] ==> 下一个trigger a single-TimerEvent, count ii = [x+1]
+    // 中间肯定是间隔1s的！我打印的日志时间就能够说明问题！很容易看的！
     eventloop->addTimerEvent(timer_event);
 
     eventloop->addEpollEvent(&event);

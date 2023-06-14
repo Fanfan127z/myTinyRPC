@@ -23,7 +23,8 @@
 namespace rocket {
     
 /* 
-    使用Reactor模式的并使用epoll这种IO多路复用技术的类
+    使用 主从-Reactor模式架构 的并使用epoll这种IO多路复用技术的类
+    然后后面会给IO线程再次把这个EventLoop封装一层！
 */
 class EventLoop{
 private:

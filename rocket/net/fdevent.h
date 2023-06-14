@@ -19,7 +19,7 @@ public:
     
     inline int getFd() const { return m_fd; }
     inline struct epoll_event getEpollEvent(){ return m_listen_event; }
-    ~FdEvent();
+    virtual ~FdEvent();// 被用做 基类 的类，析构函数必须是virtual的！
 
 protected:
 // private:

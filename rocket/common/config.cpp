@@ -20,7 +20,10 @@ if( !(name##_node) || !(name##_node->GetText()) ){ \
 std::string name##_str = std::string(name##_node->GetText());\
 
 namespace rocket {
-    static Config* g_config = nullptr;
+
+    static Config* g_config = nullptr;// 全局的配置参数的 对象(存在于进程的data区)
+
+
     Config* Config::GetGlobalConfig(){// static
         if(g_config != nullptr)return g_config;
         g_config = new Config();
