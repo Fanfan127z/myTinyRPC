@@ -21,17 +21,22 @@ namespace rocket {
 class IO_Thread{
 private:
     // 注意了，Effective C++中指出，但凡是内置数据类型，都最好赋初值，否则会是一个undefine的值！
-    pthread_t m_thread {-1};// 指向当前的线程(句柄)
+    pthread_t m_thread {0};// 指向当前的线程(句柄)
     pid_t m_thread_id {-1};// 当前线程id
     EventLoop* m_event_loop {nullptr};// 当前线程所持有的 完成epoll事件整个流程的 Loop的对象(即当前IO线程的loop对象)
 
-    sem_t m_init_semaphore;// 信号量，do同步用！
+    sem_t m_init_semaphore;// 初始化eventLoop的信号量，do同步用！
+    sem_t m_start_semaphore;// 开启loop的信号量，do同步用！
 public:
 
     IO_Thread();
     ~IO_Thread();
+    EventLoop* getEventLoop();// 获取eventLoop对象！
 
-    void TO_Thread_Join();// maybe used in future but now we do not use it
+    void start();
+    void join();
+
+    // void TO_Thread_Join();// maybe used in future but now we do not use it
     
     // void* createEventLoop(void*);
 

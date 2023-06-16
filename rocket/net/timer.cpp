@@ -179,6 +179,7 @@ void Timer::onTimer(){
     // m_pending_events.erase(begin, it);// 原本的代码是begin,这行代码是会报Segmentation fault (core dumped)错的！
     m_pending_events.erase(m_pending_events.begin(), it);// erase [first, last)左闭右开区间内的all elements from container
     lock.unlock();
+    
     // 再需要把重复的Event，再次添加到事件任务队列m_pending_events中
     std::vector<rocket::TimerEvent::s_ptr>::iterator ite = tmps.begin();
     for( ;ite != tmps.end(); ++ite){

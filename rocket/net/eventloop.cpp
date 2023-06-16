@@ -257,7 +257,7 @@ void EventLoop::addEpollEvent(FdEvent * event){
         //         ERRORLOG("failed to epoll_ctl when add fd [%d], error = [%d], error info:[%s]", event->getFd(), errno, strerror(errno));
         //     }
         // };
-        addTask(callback, true);// 添加事件的时候，我们是希望尽快把 任务 添加进去 任务队列里面的！
+        addTask(callback, true);// 添加事件的时候，我们是希望尽快把 任务 添加进去 任务队列里面 并 让其尽快执行掉的！
     }
     
 }

@@ -34,11 +34,11 @@ const std::string TimerEvent::TimerEventType2String(TimerEventType timerEventTyp
     std::string ret;
     switch (timerEventType){
     case NORMAL_TIMER_EVENT:
-        ret = "Normal TimerEvent";break;
+        ret = "Normal";break;
     case REPEATABLE_TIMER_EVENT:
-        ret = "Repeatable TimerEvent";break;
+        ret = "Repeatable";break;
         default: 
-        ret = "Unknown TimerEvent Type";break;
+        ret = "Unknown";break;
     }
     return ret;
 }

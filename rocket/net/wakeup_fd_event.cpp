@@ -42,9 +42,9 @@ void WakeUpFdEvent::wakeup(){// 触发 读事件
         我就自己触发自己去检测触发client要do的任务（执行任务回调函数来达到这个目的）*/
     int ret = write(m_fd, buf, 8);
     if(ret != 8){
-        ERRORLOG("failed to wakeup fd less than 8 bytes ,fd = [%d]\n", m_fd);
+        ERRORLOG("failed to wakeup fd less than 8 bytes ,fd = [%d]", m_fd);
     }
-    DEBUGLOG("success read 8 bytes\n");
+    DEBUGLOG("success write 8 bytes from wakeup fd[%d]", m_fd);
 }
 
 }// rocket
