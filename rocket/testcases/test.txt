@@ -44,6 +44,10 @@ g++ test_log.cpp -L. -lrocket -L/usr/lib -ltinyxml -o test_log -lpthread
 g++  test_log.cpp -L. -lrocket -L/usr/lib -ltinyxml -lpthread -o test_log
 
 
+# 下面这行命令 可用于检测我的RPC-serve服务所监听的套接字的过程是否有问题！
+telnet 127.0.0.1 [端口号]
+比如：telnet 127.0.0.1 10001
+
 
 提交代码的git命令:
 git add .
