@@ -1,0 +1,76 @@
+#include "tcp_accepter.h"
+#include "../../common/log.h"// use log
+#include <error.h>
+#include <string.h>// use memset
+#include <sys/fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+namespace rocket{
+TcpAccepter::TcpAccepter(const NetAddrBase::s_ptr& netaddr):m_local_addr(netaddr){
+    if(!m_local_addr->checkValid()){
+        ERRORLOG("Server TcpAccepter() failed, netaddr[%s] is invalid",m_local_addr->toString().c_str());
+        exit(-1);// 程序异常退出
+    }
+    m_family = m_local_addr->getFamily();
+
+}
+TcpAccepter::TcpAccepter(const IPv4NetAddr& netaddr):m_netAddr(netaddr){
+    // 1. 创建监听的套接字
+    int lfd = socket(AF_INET, SOCK_STREAM, 0);
+    if(lfd == -1){// 服务端套接字都没法创建成功肯定没法正常往下do事情了！
+        DEBUGLOG("Server TcpAccepter socket error, errno = [%d], error info = [%s]", errno, strerror(errno));
+        exit(-1);// 程序异常退出
+    }
+    m_listenfd = lfd;
+    // 设置端口复用(端口可被重复利用，非必须)
+    int opt = 1;
+    if(setsockopt(m_listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1){
+        ERRORLOG("setsockopt REUSEADDR error, errno = [%d], error info = [%s]", errno, strerror(errno));
+        // 因为是非必要的，因此此时程序不退出
+    }
+
+    // 设置fd为非阻塞，
+    // 讲文件描述符fd设置为非阻塞的，因为我们的主从reactor模型是不允许阻塞读/写的，读写都是异步的
+    int flag = fcntl(m_listenfd, F_GETFL);// 得到文件描述符的属性
+    flag |= O_NONBLOCK;
+    fcntl(m_listenfd, F_SETFL, flag);
+
+    // 2.将socket()返回值与本地server的IP和端口绑定到一起
+    int ret = bind(m_listenfd, m_netAddr.getSocketAddr(), m_netAddr.getSocketLen());
+    if(ret == -1){
+        DEBUGLOG("Server TcpAccepter bind error, errno = [%d], error info = [%s]", errno, strerror(errno));
+        exit(-1);// 程序异常退出
+    }
+    // 3.设置监听
+    ret = listen(m_listenfd, 128);
+    if(ret == -1){
+        DEBUGLOG("Server TcpAccepter listen error, errno = [%d], error info = [%s]", errno, strerror(errno));
+        exit(-1);// 程序异常退出
+    }
+}
+TcpAccepter::~TcpAccepter(){
+    
+}
+int TcpAccepter::accept(){
+    // 4.阻塞等待并接受客户端的连接
+    // 注意：这里必须先设置m_client_addr_len为原本的结构体大小，而不是0
+    // 因为accept中的m_client_addr_len是传入传出参数，不这么do无法传出正确的client_addr的真实值
+    int ret_fd_val = -1;
+    if(m_family == AF_INET){// IPv4
+        m_client_addr_len = sizeof(m_client_addr);
+        memset(&m_client_addr, 0, m_client_addr_len);
+        int cfd = ::accept(m_listenfd, (struct sockaddr*)&m_client_addr, &m_client_addr_len);
+        if(cfd == -1){
+            DEBUGLOG("TcpAccepter accept error, error = [%d], error info = [%s]", errno, strerror(errno));
+            // 不需要程序异常退出，可以让客户端重新尝试！
+        }
+        INFOLOG("Server successfuly accepted a client[%s]", IPv4NetAddr(m_client_addr).toString().c_str());
+        ret_fd_val = cfd;
+    }
+    else {
+        //...其他协议也类似，同上理，可扩展
+    }
+    return ret_fd_val;
+}
+}// rocket
