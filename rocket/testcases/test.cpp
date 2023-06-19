@@ -2,7 +2,11 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <sys/time.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <functional>
 #include <algorithm>
 #include <sstream>
@@ -24,7 +28,32 @@ std::string formatString(const char* str, Args&& ... args){
     return result;
 }
 
+void tt2(const std::string& addr){// example: addr = "127.0.0.1:9999"
+    int idx = addr.find_first_of(":");
+    if(idx == addr.npos){
+        // ERRORLOG("[%s] is an invalid IPv4 addr", addr.c_str());
+        printf("[%s] is an invalid IPv4 addr\n", addr.c_str());
+        return;
+    }
+    std::string m_ip = addr.substr(0, idx);
+    uint16_t m_port = std::stoi(addr.substr(idx+1, addr.size() - idx - 1));
+    printf("[%s:%d] is an valid IPv4 addr\n", m_ip.c_str(), m_port);
+}
+void tt(const char* buf, int size){
+    vector<char> m_buffer{'a','b','c'};
+    m_buffer.resize(10);
+    int idx = 0;
+    int m_writeIndex = 3;
+    // while(idx < size){
+    //     m_buffer[m_writeIndex++] = buf[idx++];
+    // }
+    memcpy(&m_buffer[m_writeIndex], buf, size);
+    for_each(m_buffer.begin(), m_buffer.end(), [](int val){
+        printf("[%c]\t", val);
+    });
+    printf("m_writeIndex = [%d]\n", m_writeIndex);
 
+}
 void func1(){
     printf("func1 called\n");
 }
@@ -80,10 +109,13 @@ enum TimerEventType{
     REPEATABLE_TIMER_EVENT,// 需要被重复执行的timerEvent定时任务事件
 };
 int main(){
-    TimerEventType tt=REPEATABLE_TIMER_EVENT;
-    if(tt==REPEATABLE_TIMER_EVENT){
-        printf("tt==REPEATABLE_TIMER_EVENT\n");
-    }
+
+    // tt("lzf", 3);
+    tt2("127.0.0.1:9999");// example: addr = "127.0.0.1:9999"
+    // TimerEventType tt=REPEATABLE_TIMER_EVENT;
+    // if(tt==REPEATABLE_TIMER_EVENT){
+    //     printf("tt==REPEATABLE_TIMER_EVENT\n");
+    // }
 
     // Fptr alias = f;
     // f();
