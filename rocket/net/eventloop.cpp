@@ -45,6 +45,13 @@ static int g_epoll_max_timeout = 10000;// 这里定为10s,超过这个时间就�
 // epoll最大的 监听事件数量
 static int g_epoll_max_events = 10;
 
+EventLoop* EventLoop::GetCurrentEventLoop(){// 获取当前线程的eventloop对象，if当前线程不存在的话就new一个
+    if(t_current_eventloop == nullptr){
+        t_current_eventloop = new EventLoop();
+    }
+    return t_current_eventloop;
+}
+
 EventLoop::EventLoop(){
     if(t_current_eventloop != nullptr){
         ERRORLOG("failed to create event loop, this thread has created event loop");// 打印error日志

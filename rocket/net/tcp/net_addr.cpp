@@ -16,7 +16,7 @@ void IPv4NetAddr::init(){
     INFOLOG("success init IPv4NetAddr[%s:%d]", m_ip.c_str(), m_port);
 }
 IPv4NetAddr::IPv4NetAddr(const std::string& addr){// example: addr = "127.0.0.1:9999"
-    int idx = addr.find_first_of(":");
+    size_t idx = addr.find_first_of(":");
     if(idx == addr.npos){
         ERRORLOG("IPv4NetAddr error, [%s] is an invalid IPv4 addr", addr.c_str());
         return;

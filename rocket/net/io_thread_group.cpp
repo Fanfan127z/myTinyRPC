@@ -10,7 +10,10 @@ IO_Thread_Group::IO_Thread_Group(size_t size):m_size(size){
     INFOLOG("success create IO Thread Group, which size is [%d]", m_size);
 }
 IO_Thread_Group::~IO_Thread_Group(){
-    
+    // 恢复初始值
+    m_size = 0;
+    m_io_threads_group.clear();
+    m_index = -1;
 }
 void IO_Thread_Group::start(){// 控制all的IO_Threads IO线程的loop循环的开始
     for(int i = 0; i < m_size; ++i){

@@ -44,7 +44,9 @@ private:
 
 public:
     EventLoop();
-
+    
+    static EventLoop* GetCurrentEventLoop();// 获取当前线程的eventloop对象，if当前线程不存在的话就new一个
+    
     void loop();                    // 循环调用epoll_wait（RPC服务的主函数程序）
 
     void wakeup();

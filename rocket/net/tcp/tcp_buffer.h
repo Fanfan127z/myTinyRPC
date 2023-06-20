@@ -4,6 +4,7 @@
 // #include <list> 
 #include <vector> // 因为buffer是频繁增删的，其实用list更好
 #include "../../common/mutex.h"
+#include <memory>
 namespace rocket{
 
 /*
@@ -24,6 +25,7 @@ private:
     std::vector<char> m_buffer;// buffer
     Mutex m_mutex;
 public:
+    typedef std::shared_ptr<TcpBuffer> s_ptr;// 给tcpbuffer的shared_ptr指针定义一个别名
     TcpBuffer(size_t size);
 
     // 返回可读的字节数

@@ -1,14 +1,15 @@
 #ifndef ROCKET_NET_TCP_TCP_ACCEPTER_H
 #define ROCKET_NET_TCP_TCP_ACCEPTER_H
 #include "net_addr.h"
+#include <memory>
 
 namespace rocket{
 // TcpAccepter的核心功能就是 有监听到来，就要 调用accept()函数接受客户端的连接
 class TcpAccepter{
 private:
-    NetAddrBase::s_ptr m_local_addr;
     // 服务器监听的地址，addr -> ip : port
-    IPv4NetAddr m_netAddr;
+    NetAddrBase::s_ptr m_local_addr {nullptr};
+    // IPv4NetAddr m_netAddr;
     // 所监听客户端的socket_addr
     struct sockaddr_in m_client_addr;
     socklen_t m_client_addr_len {0};
@@ -16,9 +17,11 @@ private:
     int m_listenfd {-1};// 监听套接字
     int m_connectfd {-1};// 通信套接字
 public:
+    typedef std::shared_ptr<TcpAccepter> s_ptr;
     TcpAccepter(const NetAddrBase::s_ptr& netaddr);
-    TcpAccepter(const IPv4NetAddr& netaddr);
+    // TcpAccepter(const IPv4NetAddr& netaddr);
     int accept();
+    inline int getListenfd(){ return m_listenfd; }
     ~TcpAccepter();
 };
 

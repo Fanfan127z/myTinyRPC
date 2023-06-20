@@ -9,14 +9,11 @@
 namespace rocket{
 TcpAccepter::TcpAccepter(const NetAddrBase::s_ptr& netaddr):m_local_addr(netaddr){
     if(!m_local_addr->checkValid()){
-        ERRORLOG("Server TcpAccepter() failed, netaddr[%s] is invalid",m_local_addr->toString().c_str());
+        ERRORLOG("Server TcpAccepter failed, netaddr[%s] is invalid",m_local_addr->toString().c_str());
         exit(-1);// 程序异常退出
     }
     m_family = m_local_addr->getFamily();
-
-}
-TcpAccepter::TcpAccepter(const IPv4NetAddr& netaddr):m_netAddr(netaddr){
-    // 1. 创建监听的套接字
+        // 1. 创建监听的套接字
     int lfd = socket(AF_INET, SOCK_STREAM, 0);
     if(lfd == -1){// 服务端套接字都没法创建成功肯定没法正常往下do事情了！
         DEBUGLOG("Server TcpAccepter socket error, errno = [%d], error info = [%s]", errno, strerror(errno));
@@ -37,20 +34,26 @@ TcpAccepter::TcpAccepter(const IPv4NetAddr& netaddr):m_netAddr(netaddr){
     fcntl(m_listenfd, F_SETFL, flag);
 
     // 2.将socket()返回值与本地server的IP和端口绑定到一起
-    int ret = bind(m_listenfd, m_netAddr.getSocketAddr(), m_netAddr.getSocketLen());
+    int ret = bind(m_listenfd, m_local_addr->getSocketAddr(), m_local_addr->getSocketLen());
     if(ret == -1){
         DEBUGLOG("Server TcpAccepter bind error, errno = [%d], error info = [%s]", errno, strerror(errno));
         exit(-1);// 程序异常退出
     }
     // 3.设置监听
-    ret = listen(m_listenfd, 128);
+    ret = listen(m_listenfd, 1000);
     if(ret == -1){
         DEBUGLOG("Server TcpAccepter listen error, errno = [%d], error info = [%s]", errno, strerror(errno));
         exit(-1);// 程序异常退出
     }
 }
+
 TcpAccepter::~TcpAccepter(){
-    
+    // 析构时，重新 初始化 各个成员变量为默认值
+    memset(&m_client_addr, 0, sizeof(m_client_addr));
+    m_client_addr_len = {0};
+    m_family = {-1};
+    m_listenfd = {-1};
+    m_connectfd = {-1};
 }
 int TcpAccepter::accept(){
     // 4.阻塞等待并接受客户端的连接

@@ -24,7 +24,7 @@ void TcpBuffer::writeToBuffer(const char* buf, size_t size){
     
     // 调整buffer的大小，扩容到合理为止
     while(true){
-        if( size > writeAble() ){ // 此时没有可写空间，先扩容且搬移，再重新写
+        if( (int)size > writeAble() ){ // 此时没有可写空间，先扩容且搬移，再重新写
             resizeBuffer(m_size * 2);// 直接2倍扩容即可
         } else {
             break;
@@ -76,7 +76,7 @@ void TcpBuffer::readFromBuffer(std::vector<char>& re, size_t size){
         if 当前指定要读取的字节数size大于当前buffer中可读的个数，就只读取可读的部分即可
         否则，继续读size个buffer中的data
     */
-    int real_read_size = size > readAble() ? readAble() : size;
+    int real_read_size = (int)size > readAble() ? readAble() : size;
     re.resize(real_read_size);
     ScopeMutex<Mutex> lock(m_mutex);
     int idx = 0;
