@@ -9,7 +9,7 @@ namespace rocket{
 
 /*
         readIndex         writeIndex
-            |                 |
+           |                 |
 buf:       a b c A C D F R E    
 size: 10
 buf idx:   0 1 2 3 4 5 6 7 8 9
@@ -21,13 +21,15 @@ private:
     // [readIndex, writeIndex) use 左闭右开区间
     int m_readIndex {0};// buffer的可读头下标
     int m_writeIndex {0};// buffer的可写尾下标
-    size_t m_size {0};// 大小
-    std::vector<char> m_buffer;// buffer
+    size_t m_size {0};// buffer的大小
     Mutex m_mutex;
+public:
+    std::vector<char> m_buffer;// buffer
 public:
     typedef std::shared_ptr<TcpBuffer> s_ptr;// 给tcpbuffer的shared_ptr指针定义一个别名
     TcpBuffer(size_t size);
 
+    inline size_t size(){ return m_size; }
     // 返回可读的字节数
     int readAble() const;
     // 返回可写的字节数
@@ -49,8 +51,7 @@ public:
         (很多时候，调整了就可以避免频繁的扩容resizeBuffer操作，但是具体还得看应用这个buffer的场景如何)
     */
     void adjustBuffer();
-
-    // 下面这2个function其实，我觉得没必要存在，但还是先写一下，万一以后有别的想法要改造这个buffer呢？
+    // 移动 readIndex / writeIndex
     void moveReadIndex(size_t size);
     void moveWriteIndex(size_t size);
 

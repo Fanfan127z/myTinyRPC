@@ -134,7 +134,8 @@ void TcpBuffer::moveWriteIndex(size_t size){
         ERRORLOG("moveWriteIndex error, invalid size[%d], old_read_idx[%d], buffer size[%d]", size, m_readIndex, m_size);
         return;
     }
-    m_readIndex = new_writeIdx;
+    m_writeIndex = new_writeIdx;
+    adjustBuffer();// 每一次move可写index之后就必须要调整一下buffer
 }
 
 

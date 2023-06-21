@@ -17,6 +17,7 @@ public:
     std::function<void()> handler(TriggerEvent event_type);
     void listen(TriggerEvent event_type, const std::function<void()>& callback);
     
+    void setNonBlock();// set该fd是非阻塞的
     inline int getFd() const { return m_fd; }
     inline struct epoll_event getEpollEvent(){ return m_listen_event; }
     virtual ~FdEvent();// 被用做 基类 的类，析构函数必须是virtual的！

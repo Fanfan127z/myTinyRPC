@@ -1,5 +1,5 @@
 #include "tcp_server.h"
-
+#include "tcp_connection.h"
 
 namespace rocket{
 
@@ -34,11 +34,21 @@ void TcpServer::init(){
 
 //  每当有新的客户端连接到来时，需要执行
 void TcpServer::onAccept(){
-    int connectfd = m_accepter->accept();
+    std::pair<int, rocket::NetAddrBase::s_ptr> ret_pair = m_accepter->accept();
     m_client_connect_counts++;// 客户端连接数+1
-    // TODO: 把connectfd添加到 任意的IO线程中去do事情(TcpConnection类)
-
+    int connectfd = ret_pair.first;
     INFOLOG("TcpServer success get a client connection, cfd = [%d]", connectfd);
+    /*      
+        把connectfd添加到 任意的IO线程中去do事情(TcpConnection类)
+        也即client connectfd所触发的IO事件 都会由 新的IO线程 去执行
+    */
+    ;
+    NetAddrBase::s_ptr peer_addr = ret_pair.second;
+    // TODO: 这里的buffersize为128是随便初始化的，后面需要更改成配置参数的传参！
+    TcpConnection::s_ptr tcpConn = 
+        std::make_shared<TcpConnection>(m_io_thread_group->getAvailableIO_Thread().get(), connectfd, 128, peer_addr);
+    // tcpConn->execute();
+    
 }
 TcpServer::~TcpServer(){
     if(m_main_eventloop){

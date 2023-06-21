@@ -1,4 +1,6 @@
 #include "fdevent.h"  
+#include <unistd.h>
+#include <fcntl.h>
 #include <string.h>         // use memset
 #include "../common/log.h"  // 引用日志模块
 
@@ -37,6 +39,18 @@ void FdEvent::listen(TriggerEvent event_type, const std::function<void()>& callb
     }
     m_listen_event.data.ptr = this;
 }
+// set该fd是非阻塞的
+void FdEvent::setNonBlock(){
+    // 设置fd为非阻塞，
+    // 讲文件描述符fd设置为非阻塞的，因为我们的主从reactor模型是不允许阻塞读/写的，读写都是异步的
+    int flag = fcntl(m_fd, F_GETFL, 0);// 得到文件描述符的属性
+    if(flag & O_NONBLOCK){
+        return;// if判断出此时的fd已经是非阻塞的，就直接return
+    }
+    // 否则，直接set非阻塞
+    flag |= O_NONBLOCK;
+    fcntl(m_fd, F_SETFL, flag);
+}   
 FdEvent::~FdEvent(){
     
 } 
