@@ -54,24 +54,25 @@ TcpAccepter::~TcpAccepter(){
     m_family = {-1};
     m_listenfd = {-1};
     m_connectfd = {-1};
+    INFOLOG("~TcpAccepter()");
 }
 std::pair<int, NetAddrBase::s_ptr> TcpAccepter::accept(){
     // 4.阻塞等待并接受客户端的连接
-    // 注意：这里必须先设置m_client_addr_len为原本的结构体大小，而不是0
-    // 因为accept中的m_client_addr_len是传入传出参数，不这么do无法传出正确的client_addr的真实值
+    // 注意：这里必须先设置client_addr_len为原本的结构体大小，而不是0
+    // 因为accept中的client_addr_len是传入传出参数，不这么do无法传出正确的client_addr的真实值
     std::pair<int, NetAddrBase::s_ptr> ret_pair;
     if(m_family == AF_INET){// IPv4
         // 所监听客户端的socket_addr
-        struct sockaddr_in m_client_addr;
-        socklen_t m_client_addr_len = sizeof(m_client_addr);
-        memset(&m_client_addr, 0, m_client_addr_len);
-        int cfd = ::accept(m_listenfd, (struct sockaddr*)&m_client_addr, &m_client_addr_len);
+        struct sockaddr_in client_addr;
+        socklen_t client_addr_len = sizeof(client_addr);
+        memset(&client_addr, 0, client_addr_len);// 初始化一下，防止数据有问题！
+        int cfd = ::accept(m_listenfd, (struct sockaddr*)&client_addr, &client_addr_len);
         if(cfd == -1){
             DEBUGLOG("TcpAccepter accept error, error = [%d], error info = [%s]", errno, strerror(errno));
             // 不需要程序异常退出，可以让客户端重新尝试！
         }
-        INFOLOG("Server successfuly accepted a client[%s]", IPv4NetAddr(m_client_addr).toString().c_str());
-        ret_pair = std::make_pair(cfd, std::make_shared<IPv4NetAddr>(m_client_addr));
+        INFOLOG("Server successfuly accepted a client[%s]", IPv4NetAddr(client_addr).toString().c_str());
+        ret_pair = std::make_pair(cfd, std::make_shared<IPv4NetAddr>(client_addr));
     }
     else {
         //...其他协议也类似，同上理，可扩展

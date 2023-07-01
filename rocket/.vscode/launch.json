@@ -6,6 +6,33 @@
     // gdb附加的话主要是调试一些有死循环的进程的可执行程序的，一般也用不太到，用gdb launch也集gdb启动就足够了！
     "version": "0.2.0",
     "configurations": [
+        
+    {
+        "name": "(gdb) 启动",
+        "type": "cppdbg",
+        "request": "launch",
+        // "program": "${workspaceFolder}/testcases/test_eventloop",
+        // "program": "${workspaceFolder}/testcases/test_tcp",
+        "program": "${workspaceFolder}/testcases/test_client",
+        "args": ["12345"],
+        "stopAtEntry": false,
+        "cwd": "${fileDirname}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "为 gdb 启用整齐打印",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            },
+            {
+                "description": "将反汇编风格设置为 Intel",
+                "text": "-gdb-set disassembly-flavor intel",
+                "ignoreFailures": true
+            }
+        ]
+    },
     //     {
     //         "name": "(gdb) 附加",
     //         "type": "cppdbg",

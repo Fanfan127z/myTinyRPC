@@ -13,6 +13,7 @@
     if(ret == -1){\
         ERRORLOG("failed to epoll_ctl when add fd [%d], error = [%d], error info:[%s]", event->getFd(), errno, strerror(errno));\
     }else{\
+        m_listen_fds.insert(event->getFd());\
         DEBUGLOG("add epoll event success, fd = [%d]", event->getFd());\
     }\
 
@@ -29,6 +30,7 @@
     if(ret == -1){\
         ERRORLOG("failed to epoll_ctl when delete fd [%d], error = [%d], error info:[%s]", event->getFd(), errno, strerror(errno));\
     }else{\
+        m_listen_fds.erase(event->getFd());\
         DEBUGLOG("delete epoll event success, fd = [%d]", event->getFd());\
     }\
 
@@ -117,6 +119,7 @@ void EventLoop::initWakeUpFdEvent(){
     // }
 }
 void EventLoop::loop(){// 循环调用epoll_wait（RPC服务的主函数程序）
+    m_is_looping = true;
     while(!m_stop_flag){
         // 先拿出任务队列 中的 任务们
         ScopeMutex<Mutex> lock(m_mutex);
@@ -222,7 +225,9 @@ void EventLoop::wakeup(){
 }
 
 void EventLoop::stop(){
+    DEBUGLOG("EventLoop stop");
     m_stop_flag = true;
+    m_is_looping = false;
 }
 
 // （在添加epoll event之前）需要判断一下是否是当前的IO线程
@@ -309,7 +314,7 @@ EventLoop::~EventLoop(){
         delete m_timer;
         m_timer = nullptr;
     }
-    // stop();
+    stop();
     close(m_epoll_fd);// 关闭epoll实例对象
 }
 

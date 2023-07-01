@@ -37,18 +37,20 @@ void TcpServer::onAccept(){
     std::pair<int, rocket::NetAddrBase::s_ptr> ret_pair = m_accepter->accept();
     m_client_connect_counts++;// 客户端连接数+1
     int connectfd = ret_pair.first;
-    INFOLOG("TcpServer success get a client connection, cfd = [%d]", connectfd);
     /*      
         把connectfd添加到 任意的IO线程中去do事情(TcpConnection类)
         也即client connectfd所触发的IO事件 都会由 新的IO线程 去执行
     */
-    ;
     NetAddrBase::s_ptr peer_addr = ret_pair.second;
     // TODO: 这里的buffersize为128是随便初始化的，后面需要更改成配置参数的传参！
-    TcpConnection::s_ptr tcpConn = 
-        std::make_shared<TcpConnection>(m_io_thread_group->getAvailableIO_Thread().get(), connectfd, 128, peer_addr);
-    // tcpConn->execute();
-    
+    IO_Thread* io_thread = m_io_thread_group->getAvailableIO_Thread().get();
+    TcpConnection::s_ptr conn = 
+        std::make_shared<TcpConnection>(io_thread->getEventLoop(), connectfd, 128, peer_addr);
+    // 每accept之后拿到一个tcp连接，就说明该tcp连接已经处于正常情况了！
+    conn->setState(TcpConnection::TcpConnState::Connected);
+    m_client_connections.insert(conn);
+    // conn->execute();
+    INFOLOG("TcpServer success get a client connection, cfd = [%d]", connectfd);
 }
 TcpServer::~TcpServer(){
     if(m_main_eventloop){
@@ -64,7 +66,13 @@ TcpServer::~TcpServer(){
         m_listen_fd_event = nullptr;
     }
     m_client_connect_counts = 0;// 客户端连接数 置零
+    INFOLOG("~TcpServer()");
 }
 
+// 客户端连接RPC-Server时，如果断开连接之后我需要从m_client_connections中删除这个client(如何删除，得学习大佬的代码和思路)
+// 否则，会出现一直read/write 回应客户端时的error错误！
+void TcpServer::clearClientConnections(){
+    
+}
 
 }// rocket

@@ -1,12 +1,15 @@
 #ifndef ROCKET_NET_TCP_TCP_SERVER_H
 #define ROCKET_NET_TCP_TCP_SERVER_H
 
+
+#include "tcp_connection.h"// use tcp-conncection object 
 #include "tcp_accepter.h"
 #include "net_addr.h"
 #include "../eventloop.h"
 #include "../io_thread_group.h"
 #include "../fdevent.h"
 #include <functional>
+#include <set> // use set to store tcp-connection objects
 namespace rocket{
 /*
     TcpServer是一个单例对象，只能在主线程main中构建
@@ -20,19 +23,18 @@ namespace rocket{
 class TcpServer{
 private:
     NetAddrBase::s_ptr m_local_netaddr {nullptr};// 本地监听地址
-
     TcpAccepter::s_ptr m_accepter {nullptr};
-
     EventLoop* m_main_eventloop {nullptr};// mainReactor的loop
-
     IO_Thread_Group* m_io_thread_group {nullptr};// subReactor组
-
     FdEvent* m_listen_fd_event;// 监听fd的事件
-
     int m_client_connect_counts {0};// 客户端连接的总数量
+
+    std::set<TcpConnection::s_ptr> m_client_connections;// 持久化 保存 客户端连接
 public:
     TcpServer(const NetAddrBase::s_ptr& local_netaddr);
     void start();// 开启IO_Threads的loop以及主线程（即mainReactor）的loop循环
+    
+    void clearClientConnections();// 清楚 断开连接的 客户端连接
     ~TcpServer();
 private:
     void init();

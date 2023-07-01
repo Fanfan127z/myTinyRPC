@@ -39,6 +39,15 @@ void FdEvent::listen(TriggerEvent event_type, const std::function<void()>& callb
     }
     m_listen_event.data.ptr = this;
 }
+// 取消监听
+void FdEvent::cancle_listen(TriggerEvent event_type){
+    // 取消监听 读事件
+    if(event_type == TriggerEvent::IN_EVENT){   // if不知道这里为啥这么封装的话，可以查看我自己的test/test_epoll_server.cpp这个源文件！
+        m_listen_event.events &= (~EPOLLIN);// 让后续的epoll_wait不监听（或者说是）不检测对应的m_fd的读缓冲区是否有数据，即不检测是否有 读事件触发
+    } else {// 取消监听 写事件
+        m_listen_event.events &= (~EPOLLOUT);// 让后续的epoll_wait不监听（或者说是）不检测对应的m_fd的写缓冲区是否有数据，即不检测是否有 写事件触发
+    }
+}
 // set该fd是非阻塞的
 void FdEvent::setNonBlock(){
     // 设置fd为非阻塞，

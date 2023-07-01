@@ -10,6 +10,7 @@ PATH_OBJ = obj
 PATH_ROCKET = /home/ubuntu/projects/myTinyRPC/rocket 
 PATH_COMM = $(PATH_ROCKET)/common
 PATH_NET = $(PATH_ROCKET)/net 
+PATH_NET_TCP = $(PATH_ROCKET)/net/tcp
 
 PATH_TESTCASES = /home/ubuntu/projects/myTinyRPC/rocket/testcases 
 
@@ -21,6 +22,7 @@ PATH_INSTALL_INC_ROOT = /usr/include
 
 PATH_INSTALL_INC_COMM =  $(PATH_INSTALL_INC_ROOT)/$(PATH_COMM) 
 PATH_INSTALL_INC_NET =  $(PATH_INSTALL_INC_ROOT)/$(PATH_NET) 
+PATH_INSTALL_INC_NET_TCP =  $(PATH_INSTALL_INC_ROOT)/$(PATH_NET_TCP) 
 
 # PATH_PROTOBUF = /usr/include/google
 # PATH_TINYXML = /usr/include/tinyxml
@@ -28,16 +30,17 @@ CXX := g++
 
 CXXFLAGS += -g -O0 -std=c++11 -Wall -Wno-deprecated -Wno-unused-but-set-variable
 
-CXXFLAGS += -I./ -I$(PATH_ROCKET) -I$(PATH_COMM) -I$(PATH_NET)
+CXXFLAGS += -I./ -I$(PATH_ROCKET) -I$(PATH_COMM) -I$(PATH_NET) -I$(PATH_NET_TCP)
 
 LIBS += /usr/lib/libprotobuf.a / usr/lib/libtinyxml.a 
 
 COMM_OBJ = $(patsubst $(PATH_COMM)/%.cpp, $(PATH_OBJ)%.o, $(wildcard $(PATH_COMM)/*.cpp))
 NET_OBJ = $(patsubst $(PATH_NET)/%.cpp, $(PATH_OBJ)%.o, $(wildcard $(PATH_NET)/*.cpp))
+NET_TCP_OBJ = $(patsubst $(PATH_NET_TCP)/%.cpp, $(PATH_OBJ)%.o, $(wildcard $(PATH_NET_TCP)/*.cpp))
 
-ALL_TESTS : $(PATH_BIN)/test_log $(PATH_BIN)/test_eventloop
+ALL_TESTS : $(PATH_BIN)/test_log $(PATH_BIN)/test_eventloop $(PATH_BIN)/test_tcp
 
-TEST_CASE_OUT := $(PATH_BIN)/test_log $(PATH_BIN)/test_eventloop
+TEST_CASE_OUT := $(PATH_BIN)/test_log $(PATH_BIN)/test_eventloop $(PATH_BIN)/test_tcp
 
 LIB_OUT := $(PATH_LIB)/librocket.a
 
@@ -47,8 +50,11 @@ $(PATH_BIN)/test_log : $(LIB_OUT)
 $(PATH_BIN)/test_eventloop : $(LIB_OUT)
 	$(CXX) $(CXXFLAGS) $(PATH_TESTCASES)/test_eventloop.cpp -o $@ $(LIB_OUT) $(LIBS) -ldl -pthread 
 
+$(PATH_BIN)/test_tcp : $(LIB_OUT)
+	$(CXX) $(CXXFLAGS) $(PATH_TESTCASES)/test_tcp.cpp -o $@ $(LIB_OUT) $(LIBS) -ldl -pthread 
+
 # 生成静态库文件
-$(LIB_OUT): $(COMM_OBJ) $(NET_OBJ) 
+$(LIB_OUT): $(COMM_OBJ) $(NET_OBJ) $(NET_TCP_OBJ) 
 	# cd $(PATH_OBJ) && ar rcv librocket.a *.o && cp librocket.a ../lib/
 	cd $(PATH_OBJ) && ar rcv librocket.a *.o 
 
@@ -57,6 +63,9 @@ $(PATH_OBJ)/%.o : $(PATH_COMM)/%.cpp
 
 $(PATH_OBJ)/%.o : $(PATH_NET)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(PATH_OBJ)/%.o : $(PATH_NET_TCP)/%.cpp
+$(CXX) $(CXXFLAGS) -c $< -o $@
 # print something test
 # like this: make PRINT-PATH_BIN, and then will print variable PATH_BIN
 PRINT-% : ; @echo $* = $($*)
@@ -64,5 +73,5 @@ PRINT-% : ; @echo $* = $($*)
 # to clean
 
 clean: 
-	rm -f $(COMM_OBJ) $(NET_OBJ) $(PATH_LIB)/librocket.a $(PATH_OBJ)/librocket.a 
+	rm -f $(COMM_OBJ) $(NET_OBJ) $(NET_TCP_OBJ) $(PATH_LIB)/librocket.a $(PATH_OBJ)/librocket.a 
 

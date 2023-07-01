@@ -41,6 +41,7 @@ private:
     int m_wakeup_fd;                // 操作 唤醒任务do事情的fd！
 
     Timer* m_timer {nullptr};       // 定时器，定时执行 任务回调函数
+    bool m_is_looping {false};      // 判断是否已经开启了loop
 
 public:
     EventLoop();
@@ -49,6 +50,7 @@ public:
     
     void loop();                    // 循环调用epoll_wait（RPC服务的主函数程序）
 
+    inline bool is_looping() const { return m_is_looping; }
     void wakeup();
 
     void stop();

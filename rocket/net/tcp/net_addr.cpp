@@ -29,7 +29,7 @@ IPv4NetAddr::IPv4NetAddr(const std::string& addr){// example: addr = "127.0.0.1:
 IPv4NetAddr::IPv4NetAddr(const struct sockaddr_in& addr):m_addr(addr){
     m_ip = std::string(inet_ntoa(m_addr.sin_addr));
     m_port = ntohs(m_addr.sin_port);
-    INFOLOG("success init IPv4NetAddr[%s:%d] in IPv4NetAddr(const struct sockaddr_in& addr)", m_ip.c_str(), m_port);
+    // INFOLOG("success init IPv4NetAddr[%s:%d] in IPv4NetAddr(const struct sockaddr_in& addr)", m_ip.c_str(), m_port);
 }
 
 const struct sockaddr* IPv4NetAddr::getSocketAddr(){
@@ -72,7 +72,7 @@ const std::string IPv4NetAddr::toString(){
 }
 
 IPv4NetAddr::~IPv4NetAddr(){
-    
+    INFOLOG("~IPv4NetAddr()");
 }
 
 }// rocket

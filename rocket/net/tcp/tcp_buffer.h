@@ -1,5 +1,5 @@
-#ifndef ROCKET_NET_TCP_BUFFER_H
-#define ROCKET_NET_TCP_BUFFER_H
+#ifndef ROCKET_NET_TCP_TCP_BUFFER_H
+#define ROCKET_NET_TCP_TCP_BUFFER_H
 
 // #include <list> 
 #include <vector> // 因为buffer是频繁增删的，其实用list更好
@@ -51,8 +51,9 @@ public:
         (很多时候，调整了就可以避免频繁的扩容resizeBuffer操作，但是具体还得看应用这个buffer的场景如何)
     */
     void adjustBuffer();
-    // 移动 readIndex / writeIndex
+    // 移动 readIndex
     void moveReadIndex(size_t size);
+    // 移动 writeIndex
     void moveWriteIndex(size_t size);
 
     ~TcpBuffer();
@@ -64,4 +65,4 @@ public:
 
 }// rocket
 
-#endif // ROCKET_NET_TCP_BUFFER_H
+#endif // ROCKET_NET_TCP_TCP_BUFFER_H

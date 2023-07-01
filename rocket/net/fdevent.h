@@ -15,8 +15,10 @@ public:
     FdEvent(int fd);
     // FdEvent(TriggerEvent event_type);
     std::function<void()> handler(TriggerEvent event_type);
+    // 监听
     void listen(TriggerEvent event_type, const std::function<void()>& callback);
-    
+    // 取消监听
+    void cancle_listen(TriggerEvent event_type);
     void setNonBlock();// set该fd是非阻塞的
     inline int getFd() const { return m_fd; }
     inline struct epoll_event getEpollEvent(){ return m_listen_event; }

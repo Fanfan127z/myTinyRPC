@@ -85,7 +85,8 @@ void TcpBuffer::readFromBuffer(std::vector<char>& re, size_t size){
     }
     // 每一次read完成之后，都do一次调整buffer的操作，以保证buffer不太大也不太小
     adjustBuffer();
-    INFOLOG("success read [%s] from TcpBuffer");
+    // std::string tmp(re.begin(),re.end());
+    // INFOLOG("success read [%s] from TcpBuffer", tmp.c_str());
 }
 
 /* 
@@ -96,7 +97,7 @@ void TcpBuffer::adjustBuffer(){
 
     size_t threshold_for_adjust_buffer = m_size * 2 / 3;// 当已被读取的index超出总大小的2/3时，说明此时需要调整一下了！
     // 超过 调整buffer阈值的时候，需要动态调整数组（底层做的事搬移的工作）！
-    bool needToAdjust = ( m_readIndex <= threshold_for_adjust_buffer ) ? false : true;
+    bool needToAdjust = ( m_readIndex <= (int)threshold_for_adjust_buffer ) ? false : true;
     if(!needToAdjust){
         DEBUGLOG("no need to adjust TcpBuffer");
         return;
@@ -141,7 +142,7 @@ void TcpBuffer::moveWriteIndex(size_t size){
 
 
 TcpBuffer::~TcpBuffer(){
-
+    INFOLOG("~TcpBuffer()");
 }
 
 }// rocket

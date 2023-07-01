@@ -6,26 +6,32 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include "../string_codec.h"
 namespace rocket{
 
-TcpConnection::TcpConnection(IO_Thread* io_thread, int cfd
-        , size_t buffer_size,const NetAddrBase::s_ptr& peer_addr)
-        :m_io_thread(io_thread),m_cfd(cfd)
+TcpConnection::TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size
+        , const NetAddrBase::s_ptr& peer_addr, const TcpConnectionType& type /* = TcpConnectionByServer */)
+        :m_event_loop(eventloop),m_cfd(cfd),m_connection_type(type)
         {
         // 创建接收和发送缓冲区
         m_in_buffer = std::make_shared<TcpBuffer>(buffer_size);
         m_out_buffer = std::make_shared<TcpBuffer>(buffer_size);
         m_peer_addr = peer_addr;
         // 拿到可用的fdevent
-        m_fd_event = FdEventGroup::getFdEventGroup()->getFdEvent(m_cfd);
+        m_fd_event = FdEventGroup::getFdEventGroup()->getFdEvent(cfd);
+        m_fd_event->setNonBlock();// set fd为非阻塞的
+        
+        m_local_addr = std::make_shared<IPv4NetAddr>();
+        setState(NotConnected);
         /* 监听套接字的可读事件
                 注：std::bind(&TcpConnection::read, this)中传入this指针表示只调用属于该对象的TcpConnection::read成员方法！
                 当connectfd发生可读时间时，就会去执行read方法
         */
-        m_fd_event->listen(FdEvent::IN_EVENT, std::bind(&TcpConnection::onRead, this));
-        m_local_addr = std::make_shared<IPv4NetAddr>();
-        setState(NotConnected);
-        m_fd_event->setNonBlock();// set fd为非阻塞的
+        if(m_connection_type == TcpConnectionByServer){
+            listenRead();// 只有是服务端的连接时，才需要主动监听可读事件
+            // if是客户端连接时，只要要读回报时才监听
+        }
+        m_codec = std::make_shared<StringCodec>();
 }
 void TcpConnection::onRead(){
     // 从 socket缓冲区中，调用系统read函数 读取字节流进入in_buffer中
@@ -74,7 +80,7 @@ void TcpConnection::onRead(){
                 表示 已经写到没有数据可读了 的意思！ */
             if(errno == EAGAIN){
                 ERRORLOG("onRead error, create error, tmp_read_counts == -1 and errno == EAGAIN");
-                has_read_all = true;// 已经读取完毕
+                has_read_all = true;
             } else { ERRORLOG("onRead error, errno = [%d], error info = [%s]", errno, strerror(errno)); }
 
             break;
@@ -88,6 +94,7 @@ void TcpConnection::onRead(){
             , m_peer_addr->toString().c_str(), m_cfd);
         // TODO: do关闭连接的操作(处理关闭的连接)
         clear();
+        return;// 对端已关闭连接，无需继续execute()执行任务真正do事情了(即：提前退出onWrite函数，无需do任何事情)
     }
     if(!has_read_all){
         ERRORLOG("In onRead, not read all bytes data");
@@ -100,21 +107,29 @@ void TcpConnection::execute(){
     //  TODO: 将 RPC请求作为入参，执行业务逻辑得到RPC响应，再把响应发送回去
     // ...
     // 现在是do测试代码，所以直接echo一下就行了！
-    size_t size = m_in_buffer->readAble();
-    std::vector<char> tmp_buf(size);
-
-    m_in_buffer->readFromBuffer(tmp_buf, size);
-    std::string sendMsg(tmp_buf.begin(), tmp_buf.end());// convert vector<char> to string
-
-    INFOLOG("success get request from client[%s], sendMsg = [%s]", m_peer_addr->toString().c_str(), sendMsg.c_str());
-    
-    m_out_buffer->writeToBuffer(sendMsg.c_str(), sendMsg.length());
-
-    // 监听客户端通信fd的可写事件，可写了就调用onWrite把RPC响应结果返回客户端
-    m_fd_event->listen(FdEvent::OUT_EVENT, std::bind(&TcpConnection::onWrite, this));
-
+    if(m_connection_type == TcpConnectionByServer){
+        size_t size = m_in_buffer->readAble();
+        std::vector<char> tmp_buf(size);
+        m_in_buffer->readFromBuffer(tmp_buf, size);
+        std::string sendMsg(tmp_buf.begin(), tmp_buf.end());// convert vector<char> to string
+        INFOLOG("success get request from client[%s], sendMsg = [%s]", m_peer_addr->toString().c_str(), sendMsg.c_str());
+        m_out_buffer->writeToBuffer(sendMsg.c_str(), sendMsg.length());
+        listenWrite();
+    } else if(m_connection_type == TcpConnectionByClient){
+        // 从 buffer 里面 decode 得到 message 对象，接着 判断req_id是否相等，相等则读成功，执行其回调函数
+        std::vector<rocket::AbstractProtocol::s_ptr> out_msgs;
+        m_codec->decode(m_in_buffer, out_msgs);
+        
+        for(size_t i = 0;i < out_msgs.size();++i){
+            std::string req_id = out_msgs[i]->getRequestId();
+            auto it = m_read_dones.find(req_id);
+            if(it != m_read_dones.end()){
+                it->second(out_msgs[i]);// 执行回调函数
+                // it->second(out_msgs[i]->shared_from_this());// 执行回调函数，不需要这样吧，因为我本来msgs就是用shared_ptr来管理的了
+            }
+        }
+    }
 }
-// TODO: 我这里写的是仿照onRead()来写的（和大佬写的不一样）
 
 void TcpConnection::onWrite(){
     // 从 socket缓冲区中，调用系统write函数 从out_buffer中发送字节流出去
@@ -124,6 +139,15 @@ void TcpConnection::onWrite(){
             m_peer_addr->toString().c_str(), m_cfd);
         return;
     }
+    if(m_connection_type == TcpConnectionByClient){
+        // 1.将 message encode 得到字节流
+        // 2.将 字节流 写入 buffer里面，然后等后面全部发送
+        std::vector<AbstractProtocol::s_ptr> msgs;
+        for(size_t i = 0;i < m_write_dones.size(); ++i){
+            msgs.push_back(m_write_dones[i].first);
+        }
+        m_codec->encode(msgs, m_out_buffer);
+    }
     bool has_write_all = false;// 代表是否已经发送完毕all的bytes data
     bool peer_is_close = false;// 代表对端client是否已关闭连接
     // 一直循环发送，只要没有发送(写)完毕就继续写
@@ -132,6 +156,7 @@ void TcpConnection::onWrite(){
         if(m_out_buffer->readAble() <= 0){
             INFOLOG("In onWrite, out_buffer has no space to be read, so no data need to be sent to client[%s]"
             , m_peer_addr->toString().c_str());
+            has_write_all = true;
             break;
         }
         // 获取当前的out_buffer能够被读取用来write的字节数
@@ -139,31 +164,20 @@ void TcpConnection::onWrite(){
         int read_idx = m_out_buffer->readIndex();
         
         int tmp_write_counts = ::write(m_cfd, &m_out_buffer->m_buffer[read_idx], write_counts);
-        if(tmp_write_counts > 0){
-            INFOLOG("In onWrite, success write [%d] bytes to addr[%s], client cfd[%d]"
-            , write_counts, m_peer_addr->toString().c_str(), m_cfd);
-            // 调整下可读的index
-            m_in_buffer->moveReadIndex(tmp_write_counts);
-            if(tmp_write_counts == write_counts){
-                /* 
-                此时说明成功write了write_counts的bytes，但此时触发的写缓冲区中 可能 还有可写的数据
-                因此要继续continue来循环写，直到写(发送)完毕为止！ */
-                continue;
-            } else if(tmp_write_counts < write_counts){
-                // 此时说明已经 写 完触发write的缓冲区中的all bytes了！
-                has_write_all = true;
-                break;// 记得退出循环
-            }
-            // 注：tmp_write_counts比write_counts还大的情况不存在，::write()函数本身就规定了这个点
+        if(tmp_write_counts >= write_counts){
+            // INFOLOG("In onWrite, success write [%d] bytes to addr[%s], client cfd[%d]"
+            // , write_counts, m_peer_addr->toString().c_str(), m_cfd);
+            INFOLOG("In onWrite, no data need to send to client [%s]", m_peer_addr->toString().c_str());
+            m_out_buffer->moveReadIndex(tmp_write_counts);
+            has_write_all = true;
+            break;// 记得退出循环
         } else if(tmp_write_counts == -1){
             /* 此时发送缓冲区已满了，不能再发送了,这种情况下，就等待下一次缓冲区 可写触发的时候再继续发送data即可
                此时，因为是非阻塞写，如果tmp_write_counts == -1 && errno == EAGAIN时，就会报错
                表示 已经写到没有数据可写了 的意思！*/ 
             if(errno == EAGAIN){
                 ERRORLOG("onWrite has done, create error, tmp_write_counts == -1 and errno == EAGAIN");
-                has_write_all = true;// 已经发送完毕
             } else { ERRORLOG("onWrite error, errno = [%d], error info = [%s]", errno, strerror(errno)); }
-
             break;
         } else if(tmp_write_counts == 0){
             peer_is_close = true;// 此时，对端client关闭了连接
@@ -171,25 +185,39 @@ void TcpConnection::onWrite(){
         }
     }// while
     if(peer_is_close){// 对端已关闭连接
-        INFOLOG("In onWrite, peer closed connection, peer addr[%s], client cfd[%d]"
-            , m_peer_addr->toString().c_str(), m_cfd);
         // TODO: do关闭连接的操作(处理关闭的连接)
         clear();
+        INFOLOG("In onWrite, peer closed connection, peer addr[%s], client cfd[%d]"
+            , m_peer_addr->toString().c_str(), m_cfd);
+        return;// 提前退出onWrite函数，无需do任何事情了！
     }
     if(!has_write_all){
         ERRORLOG("In onWrite, not write all bytes data");
+    } else {
+        // 发送完一次之后，就取消监听 写事件，不然写事件会被一直触发（我们本意是只让写事件写一次，即只触发一次的意思）
+        m_fd_event->cancle_listen(FdEvent::OUT_EVENT);
+        m_event_loop->addEpollEvent(m_fd_event.get());// 添加到epoll中，去do真正删除监听的操作
     }
-
+    if(m_connection_type == TcpConnectionByClient){// 发送完之后，执行对应的回调函数
+        for(size_t i = 0;i < m_write_dones.size(); ++i){
+            m_write_dones[i].second(m_write_dones[i].first);// 一次性 执行完all的回调函数（按顺序）
+        }
+    }
+    m_write_dones.clear();// 执行完之后，就做一个清空操作
 }
 // 处理一些（来自客户端client主动）关闭连接后的清理工作
 void TcpConnection::clear(){
     if(getState() == Closed){
         return;// 已经关闭，无需do任何事情
     }
-    // 将套接字从eventloop在去除！
+    // 先把 所监听的读写事件 都取消掉
+    m_fd_event->cancle_listen(FdEvent::IN_EVENT);
+    m_fd_event->cancle_listen(FdEvent::OUT_EVENT);
+
+    // 然后再将套接字从eventloop在去除！
     // ( 去除之后eventloop就不会监听该fdevent的IO事件, 因为关闭连接了，无需再收发数据，
     // so理所当然无需继续监听fd对应的该fdevent的读/写事件了 )
-    m_io_thread->getEventLoop()->deleteEpollEvent(m_fd_event.get());
+    m_event_loop->deleteEpollEvent(m_fd_event.get());
     setState(Closed);// set连接的状态，代表此连接以及die了
     // ::close(m_cfd);
 }
@@ -214,10 +242,33 @@ void TcpConnection::shutdown(){
     if(ret == -1){
         ERRORLOG("TcpConnection::shutdown() failed, errno = [%d], error info = [%s]", errno, strerror(errno));
     }
-    INFOLOG("server success shutdown the tcp-connection");
+    INFOLOG("success shutdown the tcp-connection");
+}
+
+// 启动监听可写事件
+void TcpConnection::listenWrite(){
+    // 监听客户端通信fd的可写事件，可写了就调用onWrite把RPC响应结果返回客户端
+    m_fd_event->listen(FdEvent::OUT_EVENT, std::bind(&TcpConnection::onWrite, this));
+    m_event_loop->addEpollEvent(m_fd_event.get());// 添加到epoll中
+}
+// 启动监听可读事件
+void TcpConnection::listenRead(){
+    // 监听客户端通信fd的可读事件，可读了就调用onWrite把RPC响应结果返回客户端
+    m_fd_event->listen(FdEvent::IN_EVENT, std::bind(&TcpConnection::onRead, this));
+    m_event_loop->addEpollEvent(m_fd_event.get());// 注册到epoll中！才会真正生效去监听可读事件！千万别忘记了这一步！
+}
+void TcpConnection::pushSendMsg(AbstractProtocol::s_ptr msg
+    , const std::function<void(AbstractProtocol::s_ptr)>& callback){
+    // push 要发送的Msgs对象
+    m_write_dones.push_back({msg, callback});
+}
+// push 要读取的Msgs对象
+void TcpConnection::pushReadMsg(std::string req_id, 
+    const std::function<void(AbstractProtocol::s_ptr)>& callback){
+    m_read_dones.insert(std::make_pair(req_id, callback));// m_read_dones.insert({req_id, callback});
 }
 TcpConnection::~TcpConnection(){
-    
+    DEBUGLOG("~TcpConnection()");
 }
 
 

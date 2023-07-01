@@ -43,33 +43,29 @@ namespace rocket{
             用于格式化字符串。它使用了可变参数模板，可以接受任意数量和类型的参数。函数首先使用snprintf函数计算格式化后的字符串长度，然后创建一个字符串对象，并调整其大小以适应格式化后的字符串。最后，
             使用snprintf函数将格式化后的字符串写入到字符串对象中，并返回该对象。
     */ 
-    // template<class... Args>
-    // std::string formatString(const char* str, Args&& ... args){ // 打印日志时，其实就是调用这个formatString方法就ok了！
-    //     // int size = snprintf(nullptr, 0, str, args ...);
-    //     int size = snprintf(nullptr, 0, "%s", str, args ...);
-
+    // template<typename... Args>
+    // std::string formatString(const char* str, Args&&... args) {
+    //     int size = snprintf(nullptr, 0, str, args...);
     //     std::string result;
-    //     if(size > 0){
+    //     if (size > 0) {
     //         result.resize(size);
-    //         snprintf(&result[0], size + 1, "%s", str, args...);
-    //         // snprintf(&result[0], size + 1, str , args...);
+    //         snprintf(&result[0], size + 1, str, args...);
     //     }
     //     return result;
     // }
     template<typename... Args>
     std::string formatString(const char* str, Args&&... args) {
 
-    int size = snprintf(nullptr, 0, str, args...);
+        int size = snprintf(nullptr, 0, str, args...);
 
-    std::string result;
-    if (size > 0) {
+        std::string result;
+        if (size > 0) {
         result.resize(size);
         snprintf(&result[0], size + 1, str, args...);
-    }
+        }
 
-    return result;
+        return result;
     }
-    
 
     /*
         日志级别

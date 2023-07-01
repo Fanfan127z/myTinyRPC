@@ -108,10 +108,46 @@ enum TimerEventType{
     NORMAL_TIMER_EVENT, // 正常timerEvent定时任务事件，不重复执行（默认）
     REPEATABLE_TIMER_EVENT,// 需要被重复执行的timerEvent定时任务事件
 };
+struct Base{
+    Base(){ cout << "Base()" << endl; }
+    virtual ~Base(){ cout << "~Base()" << endl; }
+};
+struct Paisheng : public Base{
+    Paisheng(){ cout << "Paisheng()" << endl; }
+    ~Paisheng(){ cout << "~Paisheng()" << endl; }
+};
 int main(){
+    // 对于 子类 和 父类 的继承与派生的关系来说，一定是先 构造基类的对象，再构造子类的对象，然后析构的顺序与构造的顺序完全相反！
+    // 也即是，先析构子类对象，再析构其父类对象，如果还有更多层的继承与派生关系的话，也以此类推。。。
+    Paisheng p1;
+    cout << "--------------" << endl; 
+    Base b1;
+    cout << "--------------" << endl; 
+    Base * pb = new Paisheng();
+    delete pb;
+    cout << "--------------" << endl; 
+    // std::string str;
+    // char ch;
 
+    // std::cout << "请输入一行字符串：";
+    // std::getline(std::cin, str);
+
+    // std::cout << "请输入一个字符：";
+    // std::cin >> ch;
+
+    // std::cout << "输入的字符串为：" << str << std::endl;
+    // std::cout << "输入的字符为：" << ch << std::endl;
+    // for(char& c : str)c = tolower(c);
+    // ch = tolower(ch);
+    // std::cout << "输入的字符串为：" << str << std::endl;
+    // std::cout << "输入的字符为：" << ch << std::endl;
+    // char str[5000];
+    // cin.getline(str, 5000);
+    // char ch;
+    // cin.getline(&ch,1);
+    // printf("str=[%s],strlen(str)=[%d],ch=[%c]\n",str,strlen(str),ch);
     // tt("lzf", 3);
-    tt2("127.0.0.1:9999");// example: addr = "127.0.0.1:9999"
+    // tt2("127.0.0.1:9999");// example: addr = "127.0.0.1:9999"
     // TimerEventType tt=REPEATABLE_TIMER_EVENT;
     // if(tt==REPEATABLE_TIMER_EVENT){
     //     printf("tt==REPEATABLE_TIMER_EVENT\n");

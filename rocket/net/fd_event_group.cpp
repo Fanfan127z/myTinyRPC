@@ -3,6 +3,7 @@
 
 namespace rocket{
 static std::shared_ptr<FdEventGroup> g_fd_event_group = nullptr;
+
 FdEventGroup::FdEventGroup(size_t size):m_size(size){
     m_fd_group.resize(m_size);
     for(int i = 0;i < (int)m_size; ++i){
@@ -25,9 +26,10 @@ std::shared_ptr<FdEvent> FdEventGroup::getFdEvent(int fd){// 拿到关联fd的Fd
     return m_fd_group[fd];
 }
 // FdEventGroup是被用作一个全局对象
-std::shared_ptr<FdEventGroup> getFdEventGroup(){
-    if(!g_fd_event_group){
+std::shared_ptr<FdEventGroup> FdEventGroup::getFdEventGroup(){
+    if(g_fd_event_group == nullptr){
         g_fd_event_group = std::make_shared<FdEventGroup>(128);// 这里写定了是128,后面会改成根据配置文件来修改的
+        return g_fd_event_group;
     }
     return g_fd_event_group;
 }
