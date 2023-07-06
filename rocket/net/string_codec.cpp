@@ -5,7 +5,7 @@
 namespace rocket{
 
 // 编码：将 message 对象转化为字节流，写入到 buffer
-void StringCodec::encode(const std::vector<AbstractProtocol::s_ptr>& msgs, TcpBuffer::s_ptr& out_buf){
+void StringCodec::encode(std::vector<AbstractProtocol::s_ptr>& msgs, TcpBuffer::s_ptr& out_buf){
     for(size_t i = 0;i < msgs.size(); ++i){
         /* dynamic_pointer_cast是C++中的一种智能指针类型转换操作符，用于在类层次结构中进行安全的向下转型。
           它与dynamic_cast类似，但是用于智能指针而不是裸指针。*/

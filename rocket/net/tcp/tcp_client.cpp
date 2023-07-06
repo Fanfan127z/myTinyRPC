@@ -19,10 +19,10 @@ TcpClient::TcpClient(const NetAddrBase::s_ptr& peer_addr):m_peer_addr(peer_addr)
       ERRORLOG("TcpClient socket error, errno = [%d], error info = [%s]", errno, strerror(errno));
       exit(-1);
    }
-   // m_fd_event->setNonBlock();// 下面， TcpConnection类的构造函数中已经set了非阻塞，so这里无需重复set了！
    m_fd_event = FdEventGroup::getFdEventGroup()->getFdEvent(m_fd).get();
+   m_fd_event->setNonBlock();// 下面， TcpConnection类的构造函数中已经set了非阻塞，so这里无需重复set了！
    m_connection = std::make_shared<TcpConnection>(m_event_loop, m_fd, 128, m_peer_addr, TcpConnectionByClient);
-   m_connection->setTcpConnectionType(TcpConnectionByClient);// set为 客户端来建立 的连接
+   m_connection->setTcpConnectionType(TcpConnectionByClient);// 表示 set 为 是客户端来建立 的连接
    DEBUGLOG("TcpClient create success");
 }
 /* 注意，我们所有的连接或读写 connect/write/read 都是 异步 执行的！
@@ -56,7 +56,7 @@ void TcpClient::Connect(const std::function<void()>& done){// done是回调函�
             // 如果连接成功 且 回调函数非空，才 执行回调函数
             if(is_connect_success && done){
                done();
-               DEBUGLOG("called TcpClient callback function");
+               DEBUGLOG("TcpClient callback function has been called");
             }
          });// 监听其可写事件
          m_event_loop->addEpollEvent(m_fd_event);
@@ -64,9 +64,9 @@ void TcpClient::Connect(const std::function<void()>& done){// done是回调函�
       } else {
          ERRORLOG("TcpClient connect error, errno = [%d], error info = [%s]", errno, strerror(errno));
       }
-   }
-   
-}
+   }// if end
+}// Connect
+
 /* 异步地 发送 message，这里的message是个广义的对象，可以是字符串，也可以是我们后面定义好的rpc对象
    如果write发送成功，会调用 done函数，函数的入参就是message对象 */
 void TcpClient::Write(AbstractProtocol::s_ptr msg, std::function<void(AbstractProtocol::s_ptr)> done){
@@ -85,7 +85,7 @@ void TcpClient::Read(const std::string& req_id, std::function<void(AbstractProto
    m_connection->pushReadMsg(req_id, done);// push可读的msg进去，注册回调函数done
    m_connection->listenRead();// 然后开启 监听 可读事件
 }
-
+ 
 TcpClient::~TcpClient(){
    if(m_fd > 0){
       close(m_fd);

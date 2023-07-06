@@ -11,11 +11,15 @@
 #include "../net/codec/abstract_codec.h"
 #include "../net/codec/abstract_protocol.h"
 #include "../net/string_codec.h"
+#include "../net/codec/tiny_pb_codec.h"
+#include "../net/codec/tiny_pb_protocol.h"
 #include <memory>
+
 using namespace std;
 
 void test_conncect(uint16_t port);
 void test_tcp_client(uint16_t port);
+void test_tcp_client2(uint16_t port);
 int main(int argc, char* argv[]){
 
     rocket::Config::SetGlobalConfig("/home/ubuntu/projects/myTinyRPC/rocket/conf/rocket.xml");// 初始化创建全局 配置对象
@@ -23,10 +27,31 @@ int main(int argc, char* argv[]){
     rocket::Logger::InitGlobalLogger();// 初始化创建全局 日志对象
     
     // test_conncect(std::stoi(std::string(argv[1])));
-    test_tcp_client(std::stoi(std::string(argv[1])));
+    // test_tcp_client(std::stoi(std::string(argv[1])));
+    test_tcp_client2(std::stoi(std::string(argv[1])));
     return 0;
 }
-
+void test_tcp_client2(uint16_t port){
+    rocket::IPv4NetAddr::s_ptr addr = std::make_shared<rocket::IPv4NetAddr>("127.0.0.1", port); 
+    rocket::TcpClient client(addr);
+    auto cb = [addr, &client]()->void{
+        DEBUGLOG("test_tcp_client connect [%s] success", addr->toString().c_str());
+        std::shared_ptr<rocket::TinyPbProtocol> msg = std::make_shared<rocket::TinyPbProtocol>();
+        msg->setRequestId("123456789");
+        msg->m_pb_data = "test pb data";
+        // 发送消息，
+        client.Write(msg, [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
+            DEBUGLOG("send msg success");
+        });
+        // 读回报，并打印xxx
+        client.Read(std::string("123456789"), [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
+            std::shared_ptr<rocket::TinyPbProtocol> msg = std::dynamic_pointer_cast<rocket::TinyPbProtocol>(msg_ptr);// 向下类型转换
+            DEBUGLOG("read msg success, req_id[%s], msg[%s]", msg->getRequestId().c_str(), msg->m_pb_data.c_str());
+        });
+        
+    };
+    client.Connect(cb);
+}
 void test_tcp_client(uint16_t port){
     rocket::IPv4NetAddr::s_ptr addr = std::make_shared<rocket::IPv4NetAddr>("127.0.0.1", port); 
     rocket::TcpClient client(addr);

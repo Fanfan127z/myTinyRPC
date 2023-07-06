@@ -41,7 +41,7 @@ void TcpBuffer::writeToBuffer(const char* buf, size_t size){
     memcpy(&m_buffer[m_writeIndex], buf, size);
     m_writeIndex += size;// 千万别忘记这个！
     lock.unlock();
-    DEBUGLOG("success write buf[%s] to TcpBuffer", buf);
+    DEBUGLOG("success write buf to TcpBuffer");
 }
  // 给buffer扩容
 void TcpBuffer::resizeBuffer(size_t new_size){

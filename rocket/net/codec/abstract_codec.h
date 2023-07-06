@@ -13,7 +13,7 @@ public:
     typedef std::shared_ptr<AbstractCodec> s_ptr;
     AbstractCodec() = default;
     // 编码：将 message 对象转化为字节流，写入到 buffer
-    virtual void encode(const std::vector<AbstractProtocol::s_ptr>& msgs, TcpBuffer::s_ptr& out_buf) = 0;
+    virtual void encode(std::vector<AbstractProtocol::s_ptr>& msgs, TcpBuffer::s_ptr& out_buf) = 0;
     // 解码：将 buffer 里面的字节流 转换为 message 对象
     virtual void decode(TcpBuffer::s_ptr& buf, std::vector<AbstractProtocol::s_ptr>& out_msgs) = 0;
 

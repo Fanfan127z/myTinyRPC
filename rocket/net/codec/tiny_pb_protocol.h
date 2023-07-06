@@ -24,13 +24,10 @@ public:
     int32_t m_check_sum {0};
     bool m_parse_success {false};// 代表该msg是否是一个解析成功的包
 public:
-    TinyPbProtocol();
+    TinyPbProtocol() = default;
     
-    ~TinyPbProtocol();
+    ~TinyPbProtocol() = default;
 };
-
-char TinyPbProtocol::PB_START = 0x02;
-char TinyPbProtocol::PB_END = 0x03;
 
 }// rocket
 

@@ -127,3 +127,16 @@ Protobuf序列化的数据其实就是我们的message对象使用protobuf库序
 同时，我还借鉴了TCP协议，使用校验和，对整个RPC请求包进行校验，用于防止包的内容被篡改（校验算法还待定，可自行扩充扩展自定义）
 
 注意：我们所有的整数都是使用网络字节序（大端存储）的方式的。
+
+我写encode和decode的时候，可能有些问题，目前我排查到的就是decode的那些parse success debug logs 没有打印出来！
+so 我 明天要著重看一下 decode的代码！
+
+调用TcpConnection::onRead()函数一直有bug，循环调用onRead的 bug，我明天再看看！
+
+ok,原来是 encodeTinyPb的返回值出问题了，必须要返回过去之后再delete，不能用shared_ptr来管理
+
+### RPC-Module
+
+#### RPC过程
+                    (request)       (response)
+[read] ----> [decode] ----> [dispatch] ----> [encode] ----> [write]

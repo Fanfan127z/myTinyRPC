@@ -29,9 +29,9 @@ TcpAccepter::TcpAccepter(const NetAddrBase::s_ptr& netaddr):m_local_addr(netaddr
 
     // 设置fd为非阻塞，
     // 讲文件描述符fd设置为非阻塞的，因为我们的主从reactor模型是不允许阻塞读/写的，读写都是异步的
-    int flag = fcntl(m_listenfd, F_GETFL);// 得到文件描述符的属性
-    flag |= O_NONBLOCK;
-    fcntl(m_listenfd, F_SETFL, flag);
+    // int flag = fcntl(m_listenfd, F_GETFL);// 得到文件描述符的属性
+    // flag |= O_NONBLOCK;
+    // fcntl(m_listenfd, F_SETFL, flag);
 
     // 2.将socket()返回值与本地server的IP和端口绑定到一起
     int ret = bind(m_listenfd, m_local_addr->getSocketAddr(), m_local_addr->getSocketLen());
@@ -76,6 +76,7 @@ std::pair<int, NetAddrBase::s_ptr> TcpAccepter::accept(){
     }
     else {
         //...其他协议也类似，同上理，可扩展
+        return {-1, nullptr};
     }
     return ret_pair;
 }

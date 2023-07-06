@@ -7,6 +7,9 @@
 #include <cstring>
 #include <vector>
 #include "../string_codec.h"
+#include "../codec/tiny_pb_codec.h"
+#include "../codec/tiny_pb_protocol.h"
+
 namespace rocket{
 
 TcpConnection::TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size
@@ -23,21 +26,20 @@ TcpConnection::TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size
         
         m_local_addr = std::make_shared<IPv4NetAddr>();
         setState(NotConnected);
-        /* 监听套接字的可读事件
-                注：std::bind(&TcpConnection::read, this)中传入this指针表示只调用属于该对象的TcpConnection::read成员方法！
-                当connectfd发生可读时间时，就会去执行read方法
-        */
+        /* 监听套接字的可读事件 */
         if(m_connection_type == TcpConnectionByServer){
-            listenRead();// 只有是服务端的连接时，才需要主动监听可读事件
-            // if是客户端连接时，只要要读回报时才监听
+            listenRead();
+            /*  只有属于服务端的连接时，才需要主动监听可读事件
+                if是客户端连接时，只要要读回报时才监听 */
         }
-        m_codec = std::make_shared<StringCodec>();
+        m_codec = std::make_shared<TinyPbCodec>();
 }
 void TcpConnection::onRead(){
     // 从 socket缓冲区中，调用系统read函数 读取字节流进入in_buffer中
     if(getState() != Connected){
-        ERRORLOG("onRead error, client has already disconnected, client addr[%s], client connectfd[%d]",
-                m_peer_addr->toString().c_str(), m_cfd);
+        // TODO: 这里我直接注释掉！
+        // ERRORLOG("TcpConnection::onRead error, client has already disconnected, client addr[%s], client connectfd[%d]",
+        //         m_peer_addr->toString().c_str(), m_cfd);
         return;
     }
     // 一直循环读取，只要没有读取完毕就继续读
@@ -103,18 +105,27 @@ void TcpConnection::onRead(){
     // 简单的 echo，后面会补充 RPC 协议的解析操作
     execute();
 }
+
 void TcpConnection::execute(){
     //  TODO: 将 RPC请求作为入参，执行业务逻辑得到RPC响应，再把响应发送回去
-    // ...
     // 现在是do测试代码，所以直接echo一下就行了！
     if(m_connection_type == TcpConnectionByServer){
-        size_t size = m_in_buffer->readAble();
-        std::vector<char> tmp_buf(size);
-        m_in_buffer->readFromBuffer(tmp_buf, size);
-        std::string sendMsg(tmp_buf.begin(), tmp_buf.end());// convert vector<char> to string
-        INFOLOG("success get request from client[%s], sendMsg = [%s]", m_peer_addr->toString().c_str(), sendMsg.c_str());
-        m_out_buffer->writeToBuffer(sendMsg.c_str(), sendMsg.length());
-        listenWrite();
+        std::vector<AbstractProtocol::s_ptr> result_msgs;
+        std::vector<AbstractProtocol::s_ptr> reply_msgs;
+        m_codec->decode(m_in_buffer, result_msgs);
+        for(size_t i = 0;i < result_msgs.size();++i){
+            // 1.针对 每一个请求，调用 RPC 方法，获取相应msg
+            // 2.将相应msg放入到发送缓冲区，并监听可写事件 回包
+            INFOLOG("success get request[%s] from client[%s]",
+             result_msgs[i]->getRequestId().c_str(), m_peer_addr->toString().c_str());
+            std::shared_ptr<TinyPbProtocol> msg = std::make_shared<TinyPbProtocol>();
+            msg->m_pb_data = "hello, this is rocket rpc test pb_data";
+            msg->setRequestId(result_msgs[i]->getRequestId());
+            reply_msgs.emplace_back(msg);
+        }
+        m_codec->encode(reply_msgs, m_out_buffer);
+        listenWrite();// 监听可写事件，当epoll监听可写事情触发时，RPC-server就将out_buffer中的回包写回去给client
+
     } else if(m_connection_type == TcpConnectionByClient){
         // 从 buffer 里面 decode 得到 message 对象，接着 判断req_id是否相等，相等则读成功，执行其回调函数
         std::vector<rocket::AbstractProtocol::s_ptr> out_msgs;
@@ -135,7 +146,7 @@ void TcpConnection::onWrite(){
     // 从 socket缓冲区中，调用系统write函数 从out_buffer中发送字节流出去
     // (调用系统write函数)将当前的 out_buffer中的all bytes data 全部发送回去给 client
     if(getState() != Connected){
-        ERRORLOG("onWrite error, client has already disconnected, client addr[%s], client connectfd[%d]",
+        ERRORLOG("TcpConnection::onWrite error, client has already disconnected, client addr[%s], client connectfd[%d]",
             m_peer_addr->toString().c_str(), m_cfd);
         return;
     }
@@ -254,12 +265,14 @@ void TcpConnection::listenWrite(){
 // 启动监听可读事件
 void TcpConnection::listenRead(){
     // 监听客户端通信fd的可读事件，可读了就调用onWrite把RPC响应结果返回客户端
+    /* 注：std::bind(&TcpConnection::onRead, this)中传入this指针表示只调用属于该对象的TcpConnection::onRead成员方法！
+        当connectfd发生可读事件时，就会去执行read方法 */
     m_fd_event->listen(FdEvent::IN_EVENT, std::bind(&TcpConnection::onRead, this));
     m_event_loop->addEpollEvent(m_fd_event.get());// 注册到epoll中！才会真正生效去监听可读事件！千万别忘记了这一步！
 }
+// push 要发送的Msgs对象
 void TcpConnection::pushSendMsg(AbstractProtocol::s_ptr msg
     , const std::function<void(AbstractProtocol::s_ptr)>& callback){
-    // push 要发送的Msgs对象
     m_write_dones.push_back({msg, callback});
 }
 // push 要读取的Msgs对象

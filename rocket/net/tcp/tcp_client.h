@@ -12,7 +12,7 @@ namespace rocket{
 class TcpClient{
 private:
     NetAddrBase::s_ptr m_local_addr;// 客户端网络地址
-    NetAddrBase::s_ptr m_peer_addr;// 对端的网络地址(即当前客户端要connect的网络地址)
+    NetAddrBase::s_ptr m_peer_addr;// 对端的网络地址(即当前客户端要connect的服务端的网络地址)
     EventLoop* m_event_loop {nullptr};// 成员变量如果是裸指针，则必须要指向nullptr，否则就会是指向一个随机的值
     int m_fd {-1};
     FdEvent* m_fd_event {nullptr};

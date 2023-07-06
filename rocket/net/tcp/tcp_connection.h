@@ -56,7 +56,7 @@ private:
     TcpConnState m_state;// 代表 当前tcp连接的状态
     int m_cfd {0};// 代表 当前tcp连接的客户端用于通信的fd
     TcpConnectionType m_connection_type {TcpConnectionByServer};
-    AbstractCodec::s_ptr m_codec;
+    AbstractCodec::s_ptr m_codec;// RPC-Codec编解码器对象
     // m_write_dones: write callback functions
     // <key, val> == <AbstractProtocol, write_callback>
     // std::pair<AbstractProtocol::s_ptr, std::function<void(AbstractProtocol::s_ptr)>>
@@ -68,7 +68,8 @@ public:
     typedef std::shared_ptr<TcpConnection> s_ptr;
     TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size
         , const NetAddrBase::s_ptr& peer_addr, const TcpConnectionType& type = TcpConnectionByServer);
-    // TcpConnection的3个main方法： onRead, execute, write
+    // TcpConnection的3个主要方法： onRead, execute, onWrite
+
     void onRead();// 命名的时候前面加个on代表的是该方法是回调函数的意思
     void execute();
     void onWrite();// 命名的时候前面加个on代表的是该方法是回调函数的意思
@@ -76,9 +77,9 @@ public:
     void listenWrite();
     // 启动监听可读事件
     void listenRead();
-    inline void setState(const TcpConnection::TcpConnState& state){ m_state = state; }
+    inline void setState(const TcpConnection::TcpConnState& state) { m_state = state; }
     inline void setTcpConnectionType(const TcpConnectionType& type) { m_connection_type = type; }
-    inline TcpConnection::TcpConnState getState()const{ return m_state; }
+    inline TcpConnection::TcpConnState getState()const { return m_state; }
     void pushSendMsg(AbstractProtocol::s_ptr msg
     , const std::function<void(AbstractProtocol::s_ptr)>& callback);// push 要发送的Msgs对象
     void pushReadMsg(std::string req_id, const std::function<void(AbstractProtocol::s_ptr)>& callback);// push 要读取的Msgs对象
