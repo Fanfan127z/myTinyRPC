@@ -68,7 +68,8 @@
         "socket": "cpp",
         "timer": "cpp",
         "future": "cpp",
-        "*.xml": "cpp"
+        "*.xml": "cpp",
+        "*.inc": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
 }

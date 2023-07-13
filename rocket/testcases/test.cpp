@@ -27,7 +27,29 @@ std::string formatString(const char* str, Args&& ... args){
     }
     return result;
 }
-
+void pareseServiceFullName(const std::string& full_name, std::string& service_name, std::string& method_name){
+    int idx = 0;
+    for(int i = 0;i < full_name.size();++i){
+        if(full_name[i] == '.'){
+            idx = i;
+            break;
+        }
+    }
+    service_name = std::string(full_name.begin(), full_name.begin() + idx);
+    method_name = std::string(full_name.begin() + idx + 1, full_name.end());
+}
+void pareseServiceFullName2(const std::string& full_name
+                , std::string& service_name, std::string& method_name){
+    size_t idx = full_name.find_first_of(".");
+    if(idx == full_name.npos){
+        printf("not find '.' in full_name[%s]\n", full_name.c_str());
+        return;
+    }
+    service_name = std::string(full_name.begin(), full_name.begin() + idx);
+    method_name = std::string(full_name.begin() + idx + 1, full_name.end());
+    printf("success parse service_name[%s], method_name[%s] from full_name[%s]\n"
+            , service_name.c_str(), method_name.c_str(), full_name.c_str());
+}
 void tt2(const std::string& addr){// example: addr = "127.0.0.1:9999"
     int idx = addr.find_first_of(":");
     if(idx == addr.npos){
@@ -117,15 +139,18 @@ struct Paisheng : public Base{
     ~Paisheng(){ cout << "~Paisheng()" << endl; }
 };
 int main(){
+    std::string service_name, func_name;
+    pareseServiceFullName2("service_name.func_name", service_name, func_name);
+    printf("service_name=[%s], func_name=[%s]\n", service_name.c_str(), func_name.c_str());
     // 对于 子类 和 父类 的继承与派生的关系来说，一定是先 构造基类的对象，再构造子类的对象，然后析构的顺序与构造的顺序完全相反！
     // 也即是，先析构子类对象，再析构其父类对象，如果还有更多层的继承与派生关系的话，也以此类推。。。
-    Paisheng p1;
-    cout << "--------------" << endl; 
-    Base b1;
-    cout << "--------------" << endl; 
-    Base * pb = new Paisheng();
-    delete pb;
-    cout << "--------------" << endl; 
+    // Paisheng p1;
+    // cout << "--------------" << endl; 
+    // Base b1;
+    // cout << "--------------" << endl; 
+    // Base * pb = new Paisheng();
+    // delete pb;
+    // cout << "--------------" << endl; 
     // std::string str;
     // char ch;
 

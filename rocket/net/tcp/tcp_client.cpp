@@ -21,7 +21,8 @@ TcpClient::TcpClient(const NetAddrBase::s_ptr& peer_addr):m_peer_addr(peer_addr)
    }
    m_fd_event = FdEventGroup::getFdEventGroup()->getFdEvent(m_fd).get();
    m_fd_event->setNonBlock();// 下面， TcpConnection类的构造函数中已经set了非阻塞，so这里无需重复set了！
-   m_connection = std::make_shared<TcpConnection>(m_event_loop, m_fd, 128, m_peer_addr, TcpConnectionByClient);
+   // 因为
+   m_connection = std::make_shared<TcpConnection>(m_event_loop, m_fd, 128, nullptr, m_peer_addr, TcpConnectionByClient);
    m_connection->setTcpConnectionType(TcpConnectionByClient);// 表示 set 为 是客户端来建立 的连接
    DEBUGLOG("TcpClient create success");
 }

@@ -106,6 +106,7 @@ namespace rocket{
     }
     void Logger::log(){
         ScopeMutex<Mutex> lock(this->m_mutex);
+        lock.lock();
         // 为什么不直接用 m_mutex.lock 和 unlock呢？因为这次复合RAII
         // 我试过了，直接用m_mutex也是ok的哈！
 

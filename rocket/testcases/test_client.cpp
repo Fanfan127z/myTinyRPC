@@ -38,7 +38,7 @@ void test_tcp_client2(uint16_t port){
         DEBUGLOG("test_tcp_client connect [%s] success", addr->toString().c_str());
         std::shared_ptr<rocket::TinyPbProtocol> msg = std::make_shared<rocket::TinyPbProtocol>();
         msg->setRequestId("123456789");
-        msg->m_pb_data = "test pb data";
+        msg->m_pb_data = "test pb data"; 
         // 发送消息，
         client.Write(msg, [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
             DEBUGLOG("send msg success");

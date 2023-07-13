@@ -12,13 +12,14 @@
 
 namespace rocket{
 
-TcpConnection::TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size
+TcpConnection::TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size, const NetAddrBase::s_ptr& local_addr
         , const NetAddrBase::s_ptr& peer_addr, const TcpConnectionType& type /* = TcpConnectionByServer */)
         :m_event_loop(eventloop),m_cfd(cfd),m_connection_type(type)
         {
         // 创建接收和发送缓冲区
         m_in_buffer = std::make_shared<TcpBuffer>(buffer_size);
         m_out_buffer = std::make_shared<TcpBuffer>(buffer_size);
+        m_local_addr = local_addr;
         m_peer_addr = peer_addr;
         // 拿到可用的fdevent
         m_fd_event = FdEventGroup::getFdEventGroup()->getFdEvent(cfd);
@@ -31,6 +32,7 @@ TcpConnection::TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size
             listenRead();
             /*  只有属于服务端的连接时，才需要主动监听可读事件
                 if是客户端连接时，只要要读回报时才监听 */
+            // m_rpc_dispatcher = std::make_shared<RpcDispatcher>();
         }
         m_codec = std::make_shared<TinyPbCodec>();
 }
@@ -117,10 +119,12 @@ void TcpConnection::execute(){
             // 1.针对 每一个请求，调用 RPC 方法，获取相应msg
             // 2.将相应msg放入到发送缓冲区，并监听可写事件 回包
             INFOLOG("success get request[%s] from client[%s]",
-             result_msgs[i]->getRequestId().c_str(), m_peer_addr->toString().c_str());
+            result_msgs[i]->getRequestId().c_str(), m_peer_addr->toString().c_str());
             std::shared_ptr<TinyPbProtocol> msg = std::make_shared<TinyPbProtocol>();
-            msg->m_pb_data = "hello, this is rocket rpc test pb_data";
-            msg->setRequestId(result_msgs[i]->getRequestId());
+            // msg->m_pb_data = "hello, this is rocket rpc test pb_data";
+            // msg->setRequestId(result_msgs[i]->getRequestId());
+            // TODO: 这里的dispatch的第三个参数，可能会有error，因为我从来没有这么用过！
+            RpcDispatcher::GetRpcDispatcher()->dispatch(result_msgs[i], msg, this);
             reply_msgs.emplace_back(msg);
         }
         m_codec->encode(reply_msgs, m_out_buffer);

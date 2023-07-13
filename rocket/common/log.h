@@ -1,6 +1,7 @@
 #ifndef ROCKET_COMMON_LOG_H
 #define ROCKET_COMMON_LOG_H
 #include <cstdio>
+#include <cstdlib>
 #include <unistd.h>
 #include <cstring>
 #include <string>
@@ -56,15 +57,15 @@ namespace rocket{
     template<typename... Args>
     std::string formatString(const char* str, Args&&... args) {
 
-        int size = snprintf(nullptr, 0, str, args...);
+    int size = snprintf(nullptr, 0, str, args...);
 
-        std::string result;
-        if (size > 0) {
+    std::string result;
+    if (size > 0) {
         result.resize(size);
         snprintf(&result[0], size + 1, str, args...);
-        }
+    }
 
-        return result;
+    return result;
     }
 
     /*

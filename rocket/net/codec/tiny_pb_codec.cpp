@@ -265,7 +265,7 @@ void TinyPbCodec::decode(TcpBuffer::s_ptr& buf, std::vector<AbstractProtocol::s_
             out_msgs.push_back(msg);
             DEBUGLOG("decode msg[%s] success", msg->getRequestId().c_str());
         }// if(parse_success)
-    }
+    }// while
 }
 
 

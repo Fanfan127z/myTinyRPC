@@ -45,7 +45,7 @@ void TcpServer::onAccept(){
     // TODO: 这里的buffersize为128是随便初始化的，后面需要更改成配置参数的传参！
     IO_Thread* io_thread = m_io_thread_group->getAvailableIO_Thread().get();
     TcpConnection::s_ptr conn = 
-        std::make_shared<TcpConnection>(io_thread->getEventLoop(), connectfd, 128, peer_addr);
+        std::make_shared<TcpConnection>(io_thread->getEventLoop(), connectfd, 128, m_local_netaddr, peer_addr);
     // 每accept之后拿到一个tcp连接，就说明该tcp连接已经处于正常情况了！
     conn->setState(TcpConnection::TcpConnState::Connected);
     m_client_connections.insert(conn);

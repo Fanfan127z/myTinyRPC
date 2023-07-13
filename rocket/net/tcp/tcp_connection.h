@@ -4,13 +4,18 @@
 #include "tcp_buffer.h"
 #include "../io_thread.h"
 #include "../eventloop.h"
-#include <memory>
+#include <memory>// use shared_ptr
 #include <map>  // use map to store read callback functions
 #include <queue> // use queue to store write callback functions
 #include <utility> // use pair
 #include "../codec/abstract_protocol.h"
 #include "../codec/abstract_codec.h"
+#include "../rpc/rpc_dispatcher.h"// use rpc_dispatcher to do the actual rpc call
+
 namespace rocket{
+// 因为RpcDispatcher类中也引用了tcpconnection类，因此造成了循环引用的问题！
+// TODO: 循环引用问题需要 使用 类的前置声明来解决！
+class RpcDispatcher;
 /*
     class TcpConnection
     成员：
@@ -64,9 +69,11 @@ private:
     // <key, val> == <req_id, std::function<void(AbstractProtocol::s_ptr)>>
     std::map<std::string, std::function<void(AbstractProtocol::s_ptr)>> m_read_dones;
     
+    // std::shared_ptr<RpcDispatcher> m_rpc_dispatcher;// 仅仅提供给server端使用dispatcher来doRPC调用的事情
+    
 public:
     typedef std::shared_ptr<TcpConnection> s_ptr;
-    TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size
+    TcpConnection(EventLoop* eventloop, int cfd, size_t buffer_size, const NetAddrBase::s_ptr& local_addr
         , const NetAddrBase::s_ptr& peer_addr, const TcpConnectionType& type = TcpConnectionByServer);
     // TcpConnection的3个主要方法： onRead, execute, onWrite
 
@@ -77,6 +84,8 @@ public:
     void listenWrite();
     // 启动监听可读事件
     void listenRead();
+    inline NetAddrBase::s_ptr getLocalAddr() const { return m_local_addr; }
+    inline NetAddrBase::s_ptr getPeerAddr() const { return m_peer_addr; }
     inline void setState(const TcpConnection::TcpConnState& state) { m_state = state; }
     inline void setTcpConnectionType(const TcpConnectionType& type) { m_connection_type = type; }
     inline TcpConnection::TcpConnState getState()const { return m_state; }

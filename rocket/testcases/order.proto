@@ -1,0 +1,33 @@
+// use command: protoc --cpp_out=./ order.proto to produce order.pb.cc and order.pb.h codes 
+syntax = "proto3";
+option cc_generic_services = true;
+message makeOrderRequest { // 下单请求 结构体
+    int32 price = 1;
+    string goods = 2;
+}
+message makeOrderResponse {// 下单响应 结构体
+    int32 ret_code = 1;
+    string res_info = 2;
+    string order_id = 3;
+}
+service Order{
+    // rpc method name
+    rpc makeOrder(makeOrderRequest) returns (makeOrderResponse);
+}
+
+// message queryOrderRequest{
+//     string order_id = 1;
+// }
+// message queryOrderResponse{
+//     int32 ret_code = 1;
+//     string res_info = 2;
+//     string order_id = 3;
+//     int32 price = 4;
+//     string goods = 5;
+// }
+// service PrderService{
+//     // rpc method name
+//     rpc make_order(makeOrderRequest) returns (makeOrderResponse);
+//     // rpc method name
+//     rpc queru_order(queryOrderRequest) returns (queryOrderResponse);
+// }

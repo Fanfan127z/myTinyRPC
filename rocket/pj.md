@@ -137,6 +137,57 @@ ok,原来是 encodeTinyPb的返回值出问题了，必须要返回过去之后�
 
 ### RPC-Module
 
-#### RPC过程
+#### RPC服务端流程
                     (request)       (response)
 [read] ----> [decode] ----> [dispatch] ----> [encode] ----> [write]
+/* logic: 
+    启动RPC服务时就注册一个 OrderService 对象
+        一次RPC服务端调用过程：
+        1.先从buffer中，decode得到TinyPbProtocol结构体对象，接着从 请求体 TinyPbProtocol结构体 中得到 method_name，再从 OrderService 对象里根据 service.method_name 找到方法 func
+        2.找到对应的 request type 以及 response type
+        3.将 请求体 TinyPbProtocol结构体 中的 pb_data 反序列化为 request type 的一个对象，以及 声明一个空的 response type 对象
+        4.调用 func(requst, response) 执行 业务逻辑
+        5.将 response type 对象 序列化为 pb_data字节流，再塞入到响应的TinyPbProtocol结构体中，最后再 encode 变成字节流转入到 输出out_buffer中，
+        接着 注册 可写事件 监听，当可写事件到来触发epoll时，就发送 buffer中的RPC回包 给到客户端 */
+
+
+关于google/protobuf/service.h下的代码介绍：
+这段代码是关于Protocol Buffers的头文件代码。Protocol Buffers是Google的数据交换格式，用于序列化结构化数据。这个头文件声明了一些抽象接口，用于定义proto2的RPC服务。
+
+在这个头文件中，有几个重要的类和接口：
+
+Service类：这是一个抽象基类，用于定义基于protocol buffer的RPC服务。它包含了一些方法，用于调用服务的方法，获取服务的描述符，以及获取请求和响应的原型。
+RpcController类：这是一个抽象基类，用于在单个方法调用中进行控制和错误处理。它提供了一些方法，用于重置控制器、判断调用是否失败、获取错误信息等。
+RpcChannel类：这是一个抽象基类，用于表示与远程服务通信的通道。它包含了一个CallMethod方法，用于调用远程服务的方法。
+这些抽象接口和类的目的是为了使proto2的服务能够在不同的RPC实现上运行，而不依赖于特定的实现。通过使用这些接口和类，可以方便地定义和调用RPC服务。
+
+在代码中还有一些注释，提供了一些示例代码和使用说明。这些示例代码展示了如何定义和实现一个RPC服务，以及如何调用远程服务的方法。
+
+总的来说，这个头文件提供了一些抽象接口和类，用于定义和调用proto2的RPC服务。它的目的是使RPC服务的实现与具体的RPC实现解耦，从而提供更大的灵活性和可扩展性。
+
+
+### Protobuf
+Errorprotobuf是一种二进制数据序列化格式，用于在不同的系统之间进行数据交换和存储。它的全称是Protocol Buffers，是由Google开发的一种语言无关、平台无关、可扩展的数据交换格式。
+
+protobuf的主要用途是在不同的系统之间传输和存储结构化数据。它可以将结构化数据序列化为二进制格式，然后在不同的系统之间进行传输和存储。protobuf具有高效、紧凑、可扩展的特点，可以节省带宽和存储空间，并提高数据传输和存储的效率。
+
+protobuf在很多场景中都被广泛应用。一些常见的场景包括：
+
+网络通信：protobuf可以用于在客户端和服务器之间传输结构化数据，例如在分布式系统中进行远程过程调用（RPC）。
+数据存储：protobuf可以将结构化数据序列化为二进制格式，然后存储在数据库或文件系统中，以节省存储空间。
+数据交换：protobuf可以用于不同系统之间的数据交换，例如在微服务架构中进行服务间通信。
+数据持久化：protobuf可以将结构化数据序列化为二进制格式，然后持久化到磁盘上，以便后续读取和处理。
+要编写protobuf，首先需要定义数据结构的描述文件（.proto文件），然后使用protobuf编译器将描述文件编译成目标语言的代码。protobuf支持多种编程语言，包括C++、Java、Python等。编译后的代码可以用于序列化和反序列化结构化数据。
+
+protobuf的语法相对简洁，主要包括消息定义、字段定义、枚举定义等。消息定义用于定义数据结构，字段定义用于定义消息中的字段，枚举定义用于定义枚举类型。protobuf还支持一些高级特性，例如嵌套消息、默认值、扩展等。
+
+总之，protobuf是一种高效、紧凑、可扩展的二进制数据序列化格式，广泛应用于不同的系统之间的数据交换和存储。它的语法简洁，使用方便，可以提高数据传输和存储的效率。
+
+
+我的test_rpc_client.cpp中，先收到 response msg 的log然后再收到send request msg的log，？？？？？
+
+
+### RpcChannel
+作用：用于Rpc客户端与服务端进行通信(客户端发起RPC连接)的意思！
+
+
