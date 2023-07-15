@@ -27,4 +27,9 @@ const int ERROR_METHOD_NOT_FOUND = SYS_ERROR_PREFIX(0009);// 找不到method，�
 
 const int ERROR_PARSE_SERVICE_NAME = SYS_ERROR_PREFIX(0010);// 解析service_name失败
 
+const int ERROR_RPC_CHANNEL_INIT = SYS_ERROR_PREFIX(0011);// 初始化RpcChannel失败 or 没有初始化
+
+const int ERROR_RPC_PEER_ADDR = SYS_ERROR_PREFIX(0012);// 表示 RPC调用的对端地址空
+
+const int ERROR_RPC_CONTROLLER = SYS_ERROR_PREFIX(0013);// 表示 RpcController的相关错误
 #endif // ROCKET_COMMON_ERROR_CODE_H

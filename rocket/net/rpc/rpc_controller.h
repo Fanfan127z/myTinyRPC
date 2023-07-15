@@ -18,17 +18,17 @@ namespace rocket{
 */
 class RpcController : public google::protobuf::RpcController{
 private:
-    int32_t m_error_code {0};
-    std::string m_error_info;
-    std::string m_req_id;
+    int32_t m_error_code {0};// error_code的默认值为0，则表示RPC调用成功的意思，不为0，则表示RPC调用失败的意思！
+    std::string m_error_info = "";
+    std::string m_msg_id;
 
     bool m_is_failed {false};// 判断这次RPC调用是否已经失败了
     bool m_is_cancled {false};// 判断这次RPC调用是否已经被取消
-
+    bool m_is_finished {false};// 判断本次RPC调用是否已经完成
     NetAddrBase::s_ptr m_local_addr;// 该RPC调用的本地网络地址
     NetAddrBase::s_ptr m_peer_addr;// 该RPC调用的对端网络地址
     
-    int m_time_out {1000};// 单位是ms，so 1000ms == 1s
+    int m_time_out {1000};// 单位是ms，so 1000ms == 1s，默认的一次RPC调用的超时时间就设置为1s
 
     // TODO: if 后续有别的参数，可补充~
 public:
@@ -38,8 +38,8 @@ public:
     void SetError(int32_t error_code, const std::string& error_info);
     inline int32_t GetErrorCode() const { return m_error_code; }
     inline std::string GetErrorInfo() const { return m_error_info; }
-    inline void SetReqId(const std::string& req_id){ m_req_id = req_id; }
-    inline std::string GetReqId() const { return m_req_id; }
+    inline void SetMsgId(const std::string& msg_id){ m_msg_id = msg_id; }
+    inline std::string GetMsgId() const { return m_msg_id; }
 
     inline void SetLocalAddr(const NetAddrBase::s_ptr& addr) { m_local_addr = addr; }
     inline NetAddrBase::s_ptr GetLocalAddr() const { return m_local_addr; }
@@ -48,7 +48,9 @@ public:
 
     inline void SetTimeout(int timeout) { m_time_out = timeout; }
     inline int32_t GetTimeout() const { return m_time_out; }
-    
+
+    inline bool IsFinished() const { return m_is_finished; }
+    inline void SetFinished(bool val) { m_is_finished = val; }
 public:
     // 以下是 继承自google标准库的RpcController虚基类的方法
     // Client-side methods ---------------------------------------------

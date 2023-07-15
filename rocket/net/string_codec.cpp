@@ -21,7 +21,7 @@ void StringCodec::decode(TcpBuffer::s_ptr& buf, std::vector<AbstractProtocol::s_
     buf->readFromBuffer(tmp_re, buf->readAble());
     std::string info(tmp_re.begin(), tmp_re.end());// convert std::vector<char> 2 std::string
     auto msg_ptr = std::make_shared<StringProtocol>(info);
-    msg_ptr->setRequestId("123456");// 暂时写死
+    msg_ptr->setMsgId("123456");// 暂时写死
     out_msgs.push_back(msg_ptr);
 }
 

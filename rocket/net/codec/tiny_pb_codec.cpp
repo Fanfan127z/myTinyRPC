@@ -11,11 +11,11 @@
 namespace rocket{
 // std::shared_ptr<std::string> TinyPbCodec::encodeTinyPb(std::shared_ptr<TinyPbProtocol>& msg, int& msg_len){
 const char* TinyPbCodec::encodeTinyPb(std::shared_ptr<TinyPbProtocol>& msg, int& msg_len){
-    if(msg->getRequestId().empty()){
-        msg->setRequestId("123456789");
+    if(msg->getMsgId().empty()){
+        msg->setMsgId("123456789");
     }
-    DEBUGLOG("req_id = [%s]", msg->getRequestId().c_str());
-    int pk_len = 2 + 24 + msg->getRequestId().length() + msg->m_method_name.length() + msg->m_error_info.length() + msg->m_pb_data.length();
+    DEBUGLOG("req_id = [%s]", msg->getMsgId().c_str());
+    int pk_len = 2 + 24 + msg->getMsgId().length() + msg->m_method_name.length() + msg->m_error_info.length() + msg->m_pb_data.length();
     DEBUGLOG("pk_len = [%d]", pk_len);
 
     msg_len = pk_len;
@@ -30,12 +30,12 @@ const char* TinyPbCodec::encodeTinyPb(std::shared_ptr<TinyPbProtocol>& msg, int&
     memcpy(tmp, &pk_len_net, sizeof(pk_len_net));
     tmp += sizeof(pk_len_net);
     
-    int req_id_len = msg->getRequestId().length();
+    int req_id_len = msg->getMsgId().length();
     int32_t req_id_len_net = htonl(req_id_len);
     memcpy(tmp, &req_id_len_net, sizeof(req_id_len_net));
     tmp += sizeof(req_id_len_net);
     
-    std::string req_id_string = msg->getRequestId();
+    std::string req_id_string = msg->getMsgId();
     if(!req_id_string.empty()){// req_id为 非空 时，才do事情！
         const char* req_id = req_id_string.c_str();
         memcpy(tmp, req_id, req_id_len);
@@ -94,7 +94,7 @@ const char* TinyPbCodec::encodeTinyPb(std::shared_ptr<TinyPbProtocol>& msg, int&
 
     // std::string retBuffer = std::string(tbuf);
     // free(tbuf);
-    DEBUGLOG("encode msg[%s] success", msg->getRequestId().c_str());
+    DEBUGLOG("encode msg[%s] success", msg->getMsgId().c_str());
     // return std::make_shared<std::string>(retBuffer);
     return tbuf;
 }
@@ -184,7 +184,7 @@ void TinyPbCodec::decode(TcpBuffer::s_ptr& buf, std::vector<AbstractProtocol::s_
                 ERRORLOG("parse req_id_len_idx error, req_id_len_idx[%d] >= end_idx[%d]", req_id_len_idx, end_idx);
                 continue;// if 解析失败了，就直接跳转到下一次while循环即可
             }
-            msg->m_req_id_len = convertInt32FromNetByte2HostByte(&tmp_buf[req_id_len_idx]);// msg->getRequestId().length();
+            msg->m_req_id_len = convertInt32FromNetByte2HostByte(&tmp_buf[req_id_len_idx]);// msg->getMsgId().length();
             DEBUGLOG("parse req_id_len = [%d]", msg->m_req_id_len);
             // 上面求req_id_len的地方我没太搞懂！
 
@@ -198,8 +198,8 @@ void TinyPbCodec::decode(TcpBuffer::s_ptr& buf, std::vector<AbstractProtocol::s_
             char req_id[128] {0};
             // 从tmp_buf[req_id_idx]位置开始读取, msg->m_req_id_len个字节 并赋值给 req_id从idx==0开始的位置
             memcpy(&req_id[0], &tmp_buf[req_id_idx], msg->m_req_id_len);
-            msg->setRequestId(std::string(req_id));
-            DEBUGLOG("parse req_id success, req_id = [%s]", msg->getRequestId().c_str());
+            msg->setMsgId(std::string(req_id));
+            DEBUGLOG("parse req_id success, req_id = [%s]", msg->getMsgId().c_str());
 
             int method_name_len_idx = req_id_idx + msg->m_req_id_len;
             if(method_name_len_idx >= end_idx){
@@ -263,7 +263,7 @@ void TinyPbCodec::decode(TcpBuffer::s_ptr& buf, std::vector<AbstractProtocol::s_
             msg->m_parse_success = true;
             // 放入 输出对象队列 中
             out_msgs.push_back(msg);
-            DEBUGLOG("decode msg[%s] success", msg->getRequestId().c_str());
+            DEBUGLOG("decode msg[%s] success", msg->getMsgId().c_str());
         }// if(parse_success)
     }// while
 }

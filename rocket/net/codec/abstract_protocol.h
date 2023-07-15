@@ -21,8 +21,8 @@ private:
 public:
     typedef std::shared_ptr<AbstractProtocol> s_ptr;
     AbstractProtocol() = default;
-    inline std::string getRequestId()const { return m_request_id; }
-    inline void setRequestId(const std::string& req_id) { m_request_id = req_id; }
+    inline std::string getMsgId()const { return m_request_id; }
+    inline void setMsgId(const std::string& req_id) { m_request_id = req_id; }
     virtual ~AbstractProtocol() = default;// base class 之析构函数必须是虚的析构函数
 };
 

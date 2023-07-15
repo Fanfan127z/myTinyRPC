@@ -1,0 +1,94 @@
+[DEBUG]	[2023-07-15 21:55:07.104]	[53710:53710]	[../net/timer_event.cpp:16]	success create a single-[Repeatable]-TimerEvent, will execute at [1689429307403:2023-07-15 21:55:07]
+[INFO]	[2023-07-15 21:55:07.105]	[53710:53710]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:07.105]	[53710:53710]	[../net/eventloop.cpp:241]	add epoll event success, fd = [4]
+[DEBUG]	[2023-07-15 21:55:07.105]	[53710:53710]	[../net/timer.cpp:21]	Timer fd = [5]
+[INFO]	[2023-07-15 21:55:07.105]	[53710:53710]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:07.105]	[53710:53710]	[../net/eventloop.cpp:241]	add epoll event success, fd = [5]
+[INFO]	[2023-07-15 21:55:07.105]	[53710:53710]	[../net/eventloop.cpp:74]	successfully created event loop in thread [53710]
+[DEBUG]	[2023-07-15 21:55:07.105]	[53710:53710]	[../net/timer.cpp:89]	success [ADD] a single-[Repeatable]-TimerEvent at arrivetime = [1689429307403:2023-07-15 21:55:07]
+[DEBUG]	[2023-07-15 21:55:07.105]	[53710:53710]	[../net/timer.cpp:65]	success reset Timer class's first timerEvent's arrivetime to [1689429307403:2023-07-15 21:55:07]
+[INFO]	[2023-07-15 21:55:07.107]	[53710:53710]	[../net/tcp/net_addr.cpp:16]	success init IPv4NetAddr[127.0.0.1:12333]
+[INFO]	[2023-07-15 21:55:07.107]	[53710:53712]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53712]	[../net/eventloop.cpp:241]	add epoll event success, fd = [8]
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53712]	[../net/timer.cpp:21]	Timer fd = [9]
+[INFO]	[2023-07-15 21:55:07.108]	[53710:53712]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53712]	[../net/eventloop.cpp:241]	add epoll event success, fd = [9]
+[INFO]	[2023-07-15 21:55:07.108]	[53710:53712]	[../net/eventloop.cpp:74]	successfully created event loop in thread [53712]
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53712]	[../net/io_thread.cpp:24]	IO_Thread[53712] created, wait for start semaphore
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53710]	[../net/io_thread.cpp:52]	New IO_Thread(thread id : [53712]) create success
+[INFO]	[2023-07-15 21:55:07.108]	[53710:53713]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53713]	[../net/eventloop.cpp:241]	add epoll event success, fd = [11]
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53713]	[../net/timer.cpp:21]	Timer fd = [12]
+[INFO]	[2023-07-15 21:55:07.108]	[53710:53713]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53713]	[../net/eventloop.cpp:241]	add epoll event success, fd = [12]
+[INFO]	[2023-07-15 21:55:07.108]	[53710:53713]	[../net/eventloop.cpp:74]	successfully created event loop in thread [53713]
+[DEBUG]	[2023-07-15 21:55:07.108]	[53710:53713]	[../net/io_thread.cpp:24]	IO_Thread[53713] created, wait for start semaphore
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53710]	[../net/io_thread.cpp:52]	New IO_Thread(thread id : [53713]) create success
+[INFO]	[2023-07-15 21:55:07.110]	[53710:53710]	[../net/io_thread_group.cpp:10]	success create IO Thread Group, which size is [2]
+[INFO]	[2023-07-15 21:55:07.110]	[53710:53710]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53710]	[../net/eventloop.cpp:241]	add epoll event success, fd = [6]
+[INFO]	[2023-07-15 21:55:07.110]	[53710:53710]	[../net/tcp/tcp_server.cpp:9]	RPC TcpServer listen success on [127.0.0.1:12333]
+[INFO]	[2023-07-15 21:55:07.110]	[53710:53710]	[test_rpc_server.cpp:63]	create addr[127.0.0.1:12333]
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53710]	[../net/io_thread.cpp:60]	Now invoke IO_Thread[53712] and start loop
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53710]	[../net/io_thread.cpp:60]	Now invoke IO_Thread[53713] and start loop
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53712]	[../net/io_thread.cpp:28]	IO_Thread[53712] now start loop
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53710]	[../net/eventloop.cpp:171]	now begin to epoll wait
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53712]	[../net/eventloop.cpp:171]	now begin to epoll wait
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53713]	[../net/io_thread.cpp:28]	IO_Thread[53713] now start loop
+[DEBUG]	[2023-07-15 21:55:07.110]	[53710:53713]	[../net/eventloop.cpp:171]	now begin to epoll wait
+[DEBUG]	[2023-07-15 21:55:07.403]	[53710:53710]	[../net/eventloop.cpp:173]	now end epoll wait
+[DEBUG]	[2023-07-15 21:55:07.403]	[53710:53710]	[../net/eventloop.cpp:209]	fd[5] trigger EPOLLIN event
+[DEBUG]	[2023-07-15 21:55:07.403]	[53710:53710]	[../net/timer.cpp:133]	ontimer
+[INFO]	[2023-07-15 21:55:07.403]	[53710:53710]	[../net/timer_event.cpp:29]	success resetArriveTime for a single-[Repeatable]-TimerEvent, will execute at [1689429307703:2023-07-15 21:55:07]
+[DEBUG]	[2023-07-15 21:55:07.403]	[53710:53710]	[../net/timer.cpp:89]	success [ADD] a single-[Repeatable]-TimerEvent at arrivetime = [1689429307703:2023-07-15 21:55:07]
+[DEBUG]	[2023-07-15 21:55:07.403]	[53710:53710]	[../net/timer.cpp:65]	success reset Timer class's first timerEvent's arrivetime to [1689429307703:2023-07-15 21:55:07]
+[DEBUG]	[2023-07-15 21:55:07.403]	[53710:53710]	[../net/timer.cpp:65]	success reset Timer class's first timerEvent's arrivetime to [1689429307703:2023-07-15 21:55:07]
+[DEBUG]	[2023-07-15 21:55:21.680]	[53779:53779]	[../net/timer_event.cpp:16]	success create a single-[Repeatable]-TimerEvent, will execute at [1689429321980:2023-07-15 21:55:21]
+[INFO]	[2023-07-15 21:55:21.680]	[53779:53779]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:21.680]	[53779:53779]	[../net/eventloop.cpp:241]	add epoll event success, fd = [4]
+[DEBUG]	[2023-07-15 21:55:21.680]	[53779:53779]	[../net/timer.cpp:21]	Timer fd = [5]
+[INFO]	[2023-07-15 21:55:21.680]	[53779:53779]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:21.680]	[53779:53779]	[../net/eventloop.cpp:241]	add epoll event success, fd = [5]
+[INFO]	[2023-07-15 21:55:21.680]	[53779:53779]	[../net/eventloop.cpp:74]	successfully created event loop in thread [53779]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/timer.cpp:89]	success [ADD] a single-[Repeatable]-TimerEvent at arrivetime = [1689429321980:2023-07-15 21:55:21]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/timer.cpp:65]	success reset Timer class's first timerEvent's arrivetime to [1689429321980:2023-07-15 21:55:21]
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/tcp/net_addr.cpp:16]	success init IPv4NetAddr[127.0.0.1:12333]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/rpc/rpc_channel.cpp:26]	RpcChannel()
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/tcp/tcp_buffer.cpp:9]	success create TcpBuffer, which size is [128]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/tcp/tcp_buffer.cpp:9]	success create TcpBuffer, which size is [128]
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/rpc/rpc_channel.cpp:73]	MsgId[99998888] | call method name[Order.makeOrder]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/timer_event.cpp:16]	success create a single-[Normal]-TimerEvent, will execute at [1689429322681:2023-07-15 21:55:22]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/timer.cpp:89]	success [ADD] a single-[Normal]-TimerEvent at arrivetime = [1689429322681:2023-07-15 21:55:22]
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:241]	epoll_event.events = [4]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:241]	add epoll event success, fd = [6]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:171]	now begin to epoll wait
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:173]	now end epoll wait
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:213]	fd[6] trigger EPOLLOUT event
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/tcp/tcp_client.cpp:48]	TcpClient connect Server[127.0.0.1:12333] success, fd = [6]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:286]	delete epoll event success, fd = [6]
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/rpc/rpc_channel.cpp:125]	MsgId[99998888] | rpc client local_addr[127.0.0.1:40586] connect peer_addr[127.0.0.1:12333] success
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:241]	epoll_event.events = [4]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:241]	add epoll event success, fd = [6]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/tcp/tcp_client.cpp:70]	TcpClient callback function has been called
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:171]	now begin to epoll wait
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:173]	now end epoll wait
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:213]	fd[6] trigger EPOLLOUT event
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/codec/tiny_pb_codec.cpp:17]	req_id = [99998888]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/codec/tiny_pb_codec.cpp:19]	pk_len = [58]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/codec/tiny_pb_codec.cpp:97]	encode msg[99998888] success
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/tcp/tcp_buffer.cpp:44]	success write buf to TcpBuffer
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/tcp/tcp_connection.cpp:185]	In onWrite, no data need to send to client [127.0.0.1:12333]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/tcp/tcp_buffer.cpp:102]	no need to adjust TcpBuffer
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:241]	epoll_event.events = [0]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:241]	add epoll event success, fd = [6]
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/rpc/rpc_channel.cpp:129]	MsgId[99998888] | send rpc request success, call method name[Order.makeOrder], local_addr[127.0.0.1:40586], peer_addr[127.0.0.1:12333]
+[INFO]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:241]	epoll_event.events = [1]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:241]	add epoll event success, fd = [6]
+[DEBUG]	[2023-07-15 21:55:21.681]	[53779:53779]	[../net/eventloop.cpp:171]	now begin to epoll wait
+[DEBUG]	[2023-07-15 21:55:21.980]	[53779:53779]	[../net/eventloop.cpp:173]	now end epoll wait
+[DEBUG]	[2023-07-15 21:55:21.980]	[53779:53779]	[../net/eventloop.cpp:209]	fd[5] trigger EPOLLIN event
+[DEBUG]	[2023-07-15 21:55:21.980]	[53779:53779]	[../net/timer.cpp:133]	ontimer
+[INFO]	[2023-07-15 21:55:21.980]	[53779:53779]	[../net/timer_event.cpp:29]	success resetArriveTime for a single-[Repeatable]-TimerEvent, will execute at [1689429322280:2023-07-15 21:55:22]
+[DEBUG]	[2023-07-15 21:55:21.980]	[53779:53779]	[../net/timer.cpp:89]	success [ADD] a single-[Repeatable]-TimerEvent at arrivetime = [1689429322280:2023-07-15 21:55:22]
+[DEBUG]	[2023-07-15 21:55:21.980]	[53779:53779]	[../net/timer.cpp:65]	success reset Timer class's first timerEvent's arrivetime to [1689429322280:2023-07-15 21:55:22]
+[DEBUG]	[2023-07-15 21:55:21.980]	[53779:53779]	[../net/timer.cpp:65]	success reset Timer class's first timerEvent's arrivetime to [1689429322280:2023-07-15 21:55:22]

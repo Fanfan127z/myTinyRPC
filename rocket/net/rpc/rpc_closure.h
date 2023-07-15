@@ -11,7 +11,7 @@ class RpcClosure : public google::protobuf::Closure {
 private:
     std::function<void()> m_callback {nullptr};// 回调函数
 public:
-    // RpcClosure() = default;
+    RpcClosure(std::function<void()> cb) : m_callback(cb) {}
     // ~RpcClosure() = default;
     
     void Run() override ;

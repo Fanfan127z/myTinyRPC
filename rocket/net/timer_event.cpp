@@ -20,7 +20,7 @@ void TimerEvent::setCancle(bool val){// true-取消一个定时任务,false-不�
     m_is_cancled = val;  
 }
 bool TimerEvent::cancleRepeated(){ // 一个定时任务原来是重复执行的，但现在我们想给他取消重复执行这个熟属性就这么干！
-    m_is_repeated = true;
+    m_is_repeated = false;
     return true;
 }
 void TimerEvent::resetArriveTime(){// 重新set到达时间为当前最新的系统时间+初始化这个timerEvent时set好的时间间隔！

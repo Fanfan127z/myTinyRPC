@@ -8,7 +8,7 @@ CXXFLAGS += -g -O0 -std=c++11 -Wall -Wno-deprecated -Wno-unused-but-set-variable
 # TARGET = /home/ubuntu/projects/myTinyRPC/rocket/lib/librocket.a
 TARGET = librocket.a
 
-PATH_ROCKET = /home/ubuntu/projects/myTinyRPC/rocket 
+PATH_ROCKET = /home/ubuntu/projects/myTinyRPC2/myTinyRPC/rocket
 PATH_TESTCASES = $(PATH_ROCKET)/testcases
 
 PATH_COMM = $(PATH_ROCKET)/common

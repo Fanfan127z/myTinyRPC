@@ -119,10 +119,10 @@ void TcpConnection::execute(){
             // 1.针对 每一个请求，调用 RPC 方法，获取相应msg
             // 2.将相应msg放入到发送缓冲区，并监听可写事件 回包
             INFOLOG("success get request[%s] from client[%s]",
-            result_msgs[i]->getRequestId().c_str(), m_peer_addr->toString().c_str());
+            result_msgs[i]->getMsgId().c_str(), m_peer_addr->toString().c_str());
             std::shared_ptr<TinyPbProtocol> msg = std::make_shared<TinyPbProtocol>();
             // msg->m_pb_data = "hello, this is rocket rpc test pb_data";
-            // msg->setRequestId(result_msgs[i]->getRequestId());
+            // msg->setMsgId(result_msgs[i]->getMsgId());
             // TODO: 这里的dispatch的第三个参数，可能会有error，因为我从来没有这么用过！
             RpcDispatcher::GetRpcDispatcher()->dispatch(result_msgs[i], msg, this);
             reply_msgs.emplace_back(msg);
@@ -136,7 +136,7 @@ void TcpConnection::execute(){
         m_codec->decode(m_in_buffer, out_msgs);
         
         for(size_t i = 0;i < out_msgs.size();++i){
-            std::string req_id = out_msgs[i]->getRequestId();
+            std::string req_id = out_msgs[i]->getMsgId();
             auto it = m_read_dones.find(req_id);
             if(it != m_read_dones.end()){
                 it->second(out_msgs[i]);// 执行回调函数

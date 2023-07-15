@@ -43,7 +43,7 @@ public:
         onTimer是该类 中 最关键的函数！
         作用是：在我们触发的可读事件上需要调用的回调函数
     */
-    void onTimer();
+    void onTimer();// 发生了IO事件之后，eventloop 会执行这个回调函数
 private:
     void resetArriveTime();
 };

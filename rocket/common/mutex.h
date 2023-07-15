@@ -45,7 +45,7 @@ public:
         // assert(pthread_mutex_unlock(&m_mutex) == 0);
         pthread_mutex_unlock(&m_mutex);
     }
-    
+    inline pthread_mutex_t* getRawMutex() { return &m_mutex; }
     ~Mutex(){
         pthread_mutex_destroy(&m_mutex);
         

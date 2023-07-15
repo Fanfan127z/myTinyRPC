@@ -37,7 +37,7 @@ void test_tcp_client2(uint16_t port){
     auto cb = [addr, &client]()->void{
         DEBUGLOG("test_tcp_client connect [%s] success", addr->toString().c_str());
         std::shared_ptr<rocket::TinyPbProtocol> msg = std::make_shared<rocket::TinyPbProtocol>();
-        msg->setRequestId("123456789");
+        msg->setMsgId("123456789");
         msg->m_pb_data = "test pb data"; 
         // 发送消息，
         client.Write(msg, [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
@@ -46,7 +46,7 @@ void test_tcp_client2(uint16_t port){
         // 读回报，并打印xxx
         client.Read(std::string("123456789"), [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
             std::shared_ptr<rocket::TinyPbProtocol> msg = std::dynamic_pointer_cast<rocket::TinyPbProtocol>(msg_ptr);// 向下类型转换
-            DEBUGLOG("read msg success, req_id[%s], msg[%s]", msg->getRequestId().c_str(), msg->m_pb_data.c_str());
+            DEBUGLOG("read msg success, req_id[%s], msg[%s]", msg->getMsgId().c_str(), msg->m_pb_data.c_str());
         });
         
     };
@@ -58,7 +58,7 @@ void test_tcp_client(uint16_t port){
     auto cb = [addr, &client]()->void{
         DEBUGLOG("test_tcp_client connect [%s] success", addr->toString().c_str());
         std::shared_ptr<rocket::StringProtocol> msg = std::make_shared<rocket::StringProtocol>(std::string("hello, rocket"));
-        msg->setRequestId("123456");
+        msg->setMsgId("123456");
         // 发送消息，
         client.Write(msg, [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
             DEBUGLOG("send msg success");
@@ -66,7 +66,7 @@ void test_tcp_client(uint16_t port){
         // 读回报，并打印xxx
         client.Read(std::string("123456"), [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
             std::shared_ptr<rocket::StringProtocol> msg = dynamic_pointer_cast<rocket::StringProtocol>(msg_ptr);// 向下类型转换
-            DEBUGLOG("read msg success, req_id[%s], msg.info[%s]", msg->getRequestId().c_str(), msg->getInfo().c_str());
+            DEBUGLOG("read msg success, req_id[%s], msg.info[%s]", msg->getMsgId().c_str(), msg->getInfo().c_str());
         });
         // 发送消息，
         client.Write(msg, [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
@@ -75,7 +75,7 @@ void test_tcp_client(uint16_t port){
         // // 读回报，并打印xxx
         // client.Read(std::string("123456"), [](rocket::AbstractProtocol::s_ptr msg_ptr)->void{
         //     std::shared_ptr<rocket::StringProtocol> msg = dynamic_pointer_cast<rocket::StringProtocol>(msg_ptr);// 向下类型转换
-        //     DEBUGLOG("read msg 222 success, req_id[%s], msg.info[%s]", msg->getRequestId().c_str(), msg->getInfo().c_str());
+        //     DEBUGLOG("read msg 222 success, req_id[%s], msg.info[%s]", msg->getMsgId().c_str(), msg->getInfo().c_str());
         // });
     };
     client.Connect(cb);

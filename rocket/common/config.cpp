@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <tinyxml/tinyxml.h>
 #include "../common/config.h"
 // #include <iostream>
@@ -43,7 +44,18 @@ namespace rocket {
         }
         READ_XML_NODE(root, xml_document);
         READ_XML_NODE(log, root_node);
+
         READ_STR_FROM_XML_NODE(log_level, log_node);
+        READ_STR_FROM_XML_NODE(log_file_path, log_node);
+        READ_STR_FROM_XML_NODE(log_file_name, log_node);
+        READ_STR_FROM_XML_NODE(log_file_max_size, log_node);
+        READ_STR_FROM_XML_NODE(log_sync_interval, log_node);
         this->m_log_level = log_level_str;
+        this->m_log_file_path = log_file_path_str;
+        this->m_log_file_name = log_file_name_str;
+        this->m_log_file_max_size = std::stoi(log_file_max_size_str);
+        this->m_log_sync_interval = std::stoi(log_sync_interval_str);
+        printf("LOG -- CONFIG LEVLE[%s], FILE_NAME[%s], FILE_PATH[%s], FILE_MAX_SIZE[%+ld B], SYNC_INTERVAL[%+ld MS]\n",
+            m_log_level.c_str(), m_log_file_path.c_str(), m_log_file_name.c_str(), m_log_file_max_size, m_log_sync_interval);
     }
 } // rocket

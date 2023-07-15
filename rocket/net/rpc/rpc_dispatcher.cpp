@@ -56,19 +56,19 @@ void RpcDispatcher::dispatch(AbstractProtocol::s_ptr request, AbstractProtocol::
     // so 要解析一下！
     std::string service_name;
     std::string method_name;
-    response_protocol->setRequestId(req_protocol->getRequestId());
+    response_protocol->setMsgId(req_protocol->getMsgId());
     response_protocol->m_method_name = req_protocol->m_method_name;
 
-    // const char* request_id_c_str = req_protocol->getRequestId().c_str();
+    // const char* msg_id_c_str = req_protocol->getMsgId().c_str();
 
     if(parseServiceFullName(method_full_name, service_name, method_name) == false){
-        ERRORLOG("request_id[%s] | parse method_full_name to service_name and method_name error", req_protocol->getRequestId().c_str());
+        ERRORLOG("msg_id[%s] | parse method_full_name to service_name and method_name error", req_protocol->getMsgId().c_str());
         setTinyPbError(response_protocol, ERROR_PARSE_SERVICE_NAME, "parse service_name error");
         return;
     }
     auto it = m_services_map.find(service_name);
     if(it == m_services_map.end()){
-        ERRORLOG("request_id[%s] | not find service_name[%s]", req_protocol->getRequestId().c_str(), service_name.c_str());
+        ERRORLOG("msg_id[%s] | not find service_name[%s]", req_protocol->getMsgId().c_str(), service_name.c_str());
         setTinyPbError(response_protocol, ERROR_SERVICE_NOT_FOUND, "service not find");
         return;
     }
@@ -76,7 +76,7 @@ void RpcDispatcher::dispatch(AbstractProtocol::s_ptr request, AbstractProtocol::
     Service_s_ptr service = it->second;
     const google::protobuf::MethodDescriptor* method = service->GetDescriptor()->FindMethodByName(method_name);
     if(method == nullptr){
-        ERRORLOG("request_id[%s] | not find method_name[%s] in service_name[%s]", req_protocol->getRequestId().c_str(), method_name.c_str(), service_name.c_str());
+        ERRORLOG("msg_id[%s] | not find method_name[%s] in service_name[%s]", req_protocol->getMsgId().c_str(), method_name.c_str(), service_name.c_str());
         setTinyPbError(response_protocol, ERROR_METHOD_NOT_FOUND, "method not find");
         return;
     }
@@ -84,7 +84,7 @@ void RpcDispatcher::dispatch(AbstractProtocol::s_ptr request, AbstractProtocol::
     // 反序列化， 将 req_msg.pb_data 反序列化 ;
     // if(req_msg->ParseFromString(req_protocol->m_pb_data) == false){
     if(req_msg->ParseFromString(req_protocol->m_pb_data) == false){
-        ERRORLOG("request_id[%s] | re-serialize error", req_protocol->getRequestId().c_str());
+        ERRORLOG("msg_id[%s] | re-serialize error", req_protocol->getMsgId().c_str());
         setTinyPbError(response_protocol, ERROR_FAILED_RE_SERIALIZE, "re-serialize error");
         // 因为是New出来的对象，所以需要及时释放内存
         if(req_msg != nullptr){ delete req_msg; req_msg = nullptr; }
@@ -93,10 +93,10 @@ void RpcDispatcher::dispatch(AbstractProtocol::s_ptr request, AbstractProtocol::
     // 一旦反序列成功，那么就和 客户端序列化的req_msg是同一个东西
     
     // 打印一下rpc请求的信息
-    INFOLOG("request_id[%s] | get a RPC request[%s]", req_protocol->getRequestId().c_str(), req_msg->ShortDebugString().c_str());
+    INFOLOG("msg_id[%s] | get a RPC request[%s]", req_protocol->getMsgId().c_str(), req_msg->ShortDebugString().c_str());
 
     google::protobuf::Message* response_msg = service->GetResponsePrototype(method).New();
-    INFOLOG("request_id[%s] | get response_msg", req_protocol->getRequestId().c_str());
+    INFOLOG("msg_id[%s] | get response_msg", req_protocol->getMsgId().c_str());
     // 使用service自带的方法，调用 RPC 自定义方法
     // service->CallMethod()的输出参数就是调用RPC方法的响应结果，存放到参数 response_msg 中
     RpcController rpc_controller;
@@ -104,20 +104,20 @@ void RpcDispatcher::dispatch(AbstractProtocol::s_ptr request, AbstractProtocol::
     
     rpc_controller.SetPeerAddr(conn->getPeerAddr());
     rpc_controller.SetLocalAddr(conn->getLocalAddr());
-    rpc_controller.SetReqId(req_protocol->getRequestId());
+    rpc_controller.SetMsgId(req_protocol->getMsgId());
     // 在调用真正的业务方法service->CallMethod()时，通过RpcController对象，拿到这次的RPC上的一些信息
     // 比如：拿到本次RPC调用的本地地址以及远程地址，进而更好地debug
     // TODO:
-    INFOLOG("request_id[%s] | rpc_controller done", req_protocol->getRequestId().c_str());
+    INFOLOG("msg_id[%s] | rpc_controller done", req_protocol->getMsgId().c_str());
     service->CallMethod(method, &rpc_controller, req_msg, response_msg, NULL);
-    INFOLOG("request_id[%s] | CallMethod done", req_protocol->getRequestId().c_str());
+    INFOLOG("msg_id[%s] | CallMethod done", req_protocol->getMsgId().c_str());
 
     // delete rpc_controller; rpc_controller = nullptr;
-    // INFOLOG("request_id[%s] | delete rpc_controller");
+    // INFOLOG("msg_id[%s] | delete rpc_controller");
     // 将 response_msg的pb_data 做 序列化，得到字节流数据 并 塞入到response_protocol协议的m_pb_data中
     // 此时的，响应的pb_data中，是有正确的响应信息的！
     if(response_msg->SerializeToString(&(response_protocol->m_pb_data)) == false){
-        ERRORLOG("request_id[%s] | serialize error, origin response_msg[%s]", req_protocol->getRequestId().c_str(), response_msg->ShortDebugString().c_str());
+        ERRORLOG("msg_id[%s] | serialize error, origin response_msg[%s]", req_protocol->getMsgId().c_str(), response_msg->ShortDebugString().c_str());
         setTinyPbError(response_protocol, ERROR_FAILED_SERIALIZE, "serialize error");
         // 因为是New出来的对象，所以需要及时释放内存
         if(req_msg != nullptr){ delete req_msg; req_msg = nullptr; }
@@ -128,8 +128,8 @@ void RpcDispatcher::dispatch(AbstractProtocol::s_ptr request, AbstractProtocol::
     // 则set错误码是0，代表RPC调用成功！
     response_protocol->m_error_code = 0;
     // 一次RPC调用完成，并打印一下rpc响应的信息
-    INFOLOG("request_id[%s] | Dispatch success(done a RPC Call and got the response), request[%s], response[%s]"
-    , req_protocol->getRequestId().c_str(), req_msg->ShortDebugString().c_str(), response_msg->ShortDebugString().c_str());
+    INFOLOG("msg_id[%s] | Dispatch success(done a RPC Call and got the response), request[%s], response[%s]"
+    , req_protocol->getMsgId().c_str(), req_msg->ShortDebugString().c_str(), response_msg->ShortDebugString().c_str());
     // 真正do完这次的RPC调用了，释放对应的request_msg and response_msg
     if(req_msg != nullptr){ delete req_msg; req_msg = nullptr; }
     if(response_msg != nullptr){ delete response_msg; response_msg = nullptr; }

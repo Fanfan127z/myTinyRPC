@@ -37,7 +37,7 @@ Timer::Timer() : FdEvent(){
 void Timer::resetArriveTime(){
     ScopeMutex<Mutex> lock(m_mutex);
     
-    if(m_pending_events.empty()){
+    if(m_pending_events.size() == 0){
         return;// if 没有等待处理的event就直接退出！
     }
     int64_t now = getNowMs();// 获取当前的系统时间（毫秒Ms）
@@ -184,7 +184,7 @@ void Timer::onTimer(){
     std::vector<rocket::TimerEvent::s_ptr>::iterator ite = tmps.begin();
     for( ;ite != tmps.end(); ++ite){
         if( (*ite)->isRepeated() ){
-            int64_t arriveTime = (*ite)->getArriveTime();// 到达时间的时间戳
+            // int64_t arriveTime = (*ite)->getArriveTime();// 到达时间的时间戳
             // INFOLOG("success resetArriveTime for repeatable TimerEvent, will execute at [%lld:%s]", arriveTime
             //     , origin13bitTimeStamp2RealTimeForMat(arriveTime).c_str());
             // 跳转arrivetime之后再次添加到任务队列中！

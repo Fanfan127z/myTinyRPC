@@ -21,21 +21,24 @@ using namespace std;
 
 class OrderImpl : public Order {
 public:
-    void make_order(google::protobuf::RpcController* controller,
+    void makeOrder(google::protobuf::RpcController* controller,
                     const ::makeOrderRequest* request,
                     ::makeOrderResponse* response,
                     ::google::protobuf::Closure* done){
         // 我们继承了 Order 基类之后，可以自定义去实现我们自己想实现的业务方法！
         // 我们想随便怎么写就怎么写
-        INFOLOG("start sleep 3s");
-        sleep(3);
-        INFOLOG("end sleep 3s");
+        INFOLOG("start service.method()");
+        // test 超时rpc任务
+        // INFOLOG("start sleep 3s");
+        // sleep(3);
+        // INFOLOG("end sleep 3s");
         if(request->price() < 10){
             response->set_ret_code(-1);
             response->set_res_info("Insufficient Balance");
             return;
         }
         response->set_order_id("20230712");
+        INFOLOG(" end service.method()");
     }
 };
 
@@ -45,7 +48,7 @@ void test_tcp_server(uint16_t port);
 
 int main(int argc, char* argv[]){
 
-    rocket::Config::SetGlobalConfig("/home/ubuntu/projects/myTinyRPC/rocket/conf/rocket.xml");// 初始化创建全局 配置对象
+    rocket::Config::SetGlobalConfig("/home/ubuntu/projects/myTinyRPC2/myTinyRPC/rocket/conf/rocket.xml");// 初始化创建全局 配置对象
 
     rocket::Logger::InitGlobalLogger();// 初始化创建全局 日志对象
 

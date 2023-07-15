@@ -1,0 +1,213 @@
+#ifndef ROCKET_COMMON_LOG_H
+#define ROCKET_COMMON_LOG_H
+#include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
+#include <cstring>
+#include <string>
+#include <queue> // 维护all的日志缓存队列
+#include <vector> // 维护一个日志缓存队列
+#include <pthread.h>
+#include <memory> // use std::shared_ptr
+#include <semaphore.h>
+#include "mutex.h"
+#include "util.h"
+#include "../net/timer_event.h"// use timerEvent定时器 do定时任务事件
+namespace rocket{
+    // 注：__VA_ARGS__是C语言中的可变参数宏，它允许宏接受可变数量的参数。
+
+
+#define DEBUGLOG(str, ...)\
+if (rocket::Logger::GetGlobalLogger()->GetLogLevel() && rocket::Logger::GetGlobalLogger()->GetLogLevel() <= rocket::LogLevel::Debug)\
+{\
+    rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Debug).toString()\
+    + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->log();\
+}\
+
+#define INFOLOG(str, ...)\
+if (rocket::Logger::GetGlobalLogger()->GetLogLevel() && rocket::Logger::GetGlobalLogger()->GetLogLevel() <= rocket::LogLevel::Info)\
+{\
+    rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Info).toString()\
+    + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->log();\
+}\
+
+#define ERRORLOG(str, ...)\
+if (rocket::Logger::GetGlobalLogger()->GetLogLevel() && rocket::Logger::GetGlobalLogger()->GetLogLevel() <= rocket::LogLevel::Error)\
+{\
+    rocket::Logger::GetGlobalLogger()->pushLog(rocket::LogEvent(rocket::LogLevel::Error).toString()\
+    + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->log();\
+}\
+
+/* 
+    日志字符串格式转换中间函数:
+        用于格式化字符串。它使用了可变参数模板，可以接受任意数量和类型的参数。函数首先使用snprintf函数计算格式化后的字符串长度，然后创建一个字符串对象，并调整其大小以适应格式化后的字符串。最后，
+        使用snprintf函数将格式化后的字符串写入到字符串对象中，并返回该对象。
+*/ 
+// template<typename... Args>
+// std::string formatString(const char* str, Args&&... args) {
+//     int size = snprintf(nullptr, 0, str, args...);
+//     std::string result;
+//     if (size > 0) {
+//         result.resize(size);
+//         snprintf(&result[0], size + 1, str, args...);
+//     }
+//     return result;
+// }
+template<typename... Args>
+std::string formatString(const char* str, Args&&... args) {
+
+int size = snprintf(nullptr, 0, str, args...);
+
+std::string result;
+if (size > 0) {
+    result.resize(size);
+    snprintf(&result[0], size + 1, str, args...);
+}
+
+return result;
+}
+
+/*
+    日志级别
+*/
+enum LogLevel{
+    Unknown = 0,
+    Debug = 1,
+    Info  = 2,
+    Error = 3
+};
+/*
+    日志到字符串的转换
+    字符串到日志的转换
+*/
+std::string LogLevel2String(const LogLevel& logLevel);
+LogLevel String2LogLevel(const std::string& str);
+/*
+    日志事件
+        LogEvent:
+        ---
+        文件名、行号
+        MsgNo(每一次的RPC请求信息)
+        Process id 
+        Thread id 
+        time(日期时间，准确到毫秒ms)
+        自定义消息(log中需要打印到额外的信息)
+        ---
+*/
+
+class LogEvent{
+private:
+    std::string m_fileName; // 文件名
+    int32_t m_file_line;    // 行号
+    pid_t   m_pid;          // 进程号
+    pthread_t m_thread_id;  // 线程号
+    LogLevel m_log_level;   // 日志级别
+
+public:
+    // LogEvent() = default;
+    LogEvent(const LogLevel& logLevel);
+    inline std::string getFileName()const { return m_fileName;}
+    inline LogLevel GetLogLevel()const { return m_log_level; }
+    std::string toString();
+    
+    ~LogEvent() = default;
+};
+
+/* 异步日志的思路：
+    利用一个定时任务，每隔一段时间，将Logger产生的日志的buffer和我AsyncLogger的buffer交换，交换之后
+    Logger的buffer就变空了，AsyncLogger的buffer就有数据了，然后用额外的日志线程把AsyncLogger的buffer打印到文件中（只要有数据）
+
+*/
+class AsyncLogger{
+// 日志文件的格式：m_log_file_path/m_log_file_name_yyyymmdd.m_logfile_num.log
+public:
+    typedef std::shared_ptr<AsyncLogger> s_ptr;
+    static void* Loop(void*);    // 异步日志就会无限循环执行这个loop()函数，这是异步日志类AsyncLogger的核心func
+private:
+    LogLevel m_set_log_level;
+    Mutex m_mutex;// 用来保证 线程安全！
+    pthread_cond_t m_cond;// 条件变量（必须配合互斥量一起使用），通知Loop去打印日志数据
+    sem_t m_sem;// 信号量，保证打印日志数据到文件中的互斥安全。
+    pthread_t m_thread;// 异步线程，是属于该异步日志的异步线程
+    
+    std::queue<std::vector<std::string>> m_all_log_buffers;// 总日志文件队列
+    std::string m_log_file_name;// 日志文件名
+    std::string m_log_file_path;// 日志文件路径
+    size_t m_max_log_file_size {0};// 单位：字节，代表 单个日志文件最大的大小（超过这个就需要滚动到新日志文件中了）
+    
+    std::string m_date;// 当前本次 打印日志文件的日期
+    FILE* m_file_handler {nullptr};// 当前本次 打印日志文件的句柄(记录起来，防止频繁开句柄打开文件消耗系统资源)
+    bool m_re_open_flag {false};// 判断当前是否需要重复开一个日志文件
+    size_t m_logfile_num {0};// 日志文件序号，从0开始
+
+    bool m_stop_flag {false};// 退出异步日志打印的标志
+public:
+    // inline 
+public:
+    AsyncLogger(const std::string& file_name, const std::string& file_path, size_t max_size);
+        
+    void Stop();// 暂停并退出异步日志的打印
+    
+    /* 因为我们在用户态写入文件的数据，并不是立马刷新到磁盘中持久化的
+        内核里是每隔一段时间才会刷新缓冲区中的写入数据持久化到磁盘上的，但这是内核做的事情，我们没法控制多久时间
+        从而有可能会丢失掉部分的日志，正是因为这种刷盘不及时导致了日志丢失问题，so我们用户态需要提供一个 立即 操作持久化刷盘的操作
+        防止这种情况的发生。 */
+
+    void Flush();// 持久化写入到日志文件数据到磁盘
+
+    void pushLogBuffer(const std::vector<std::string>& buffers);// 把日志 同步添加到 异步的 总日志队列 中
+
+    ~AsyncLogger();
+
+};
+
+
+/*
+    Logger 日志器
+        1-提供打印日志的方法
+        2-设置日志的输出路径
+*/
+class Logger{
+private:
+    
+    LogLevel m_set_log_level;
+    std::vector<std::string> m_buffers;
+    Mutex m_mutex;// 用来保证 线程安全！
+
+    // // m_log_file_path/m_log_file_name_yyyymmdd.1.log
+    // std::string m_log_file_name;// 日志文件名
+    // std::string m_log_file_path;// 日志文件路径
+    // size_t m_max_log_file_size {0};// 单个日志文件最大的大小（超过这个就需要滚动到新日志文件中了）
+    
+    AsyncLogger::s_ptr m_async_logger {nullptr};// 异步日志
+    TimerEvent::s_ptr m_timer_event {nullptr};// 定时把当前buffers push 进去 异步日志总buffers中
+
+public:
+    // Logger() = default;
+    Logger(const LogLevel& logLevel);
+    // inline std::string getLogFilePath() const { return m_log_file_path; }
+    // inline std::string getLogFileName() const { return m_log_file_name; }
+    inline LogLevel GetLogLevel() const { return m_set_log_level; }
+    void pushLog(const std::string& msg);
+
+    // static Logger* GetGlobalLogger();// 会lead to memory leakage
+    static std::shared_ptr<Logger> GetGlobalLogger();// 我自己改进的版本！
+    
+    static void InitGlobalLogger();
+
+    void init();
+
+    void SyncLog();// 同步 Logger的m_buffers日志 到异步日志队列的总buffers(m_all_log_buffers)的队尾
+
+    void log();
+    ~Logger() = default;
+    // ~Logger() { printf("Logger deconstruct called.\n"); };
+};
+
+
+}// rocket
+
+#endif // ROCKET_COMMON_LOG_H

@@ -96,7 +96,7 @@ namespace rocket{
         // if(g_logger != nullptr)return g_logger;// 不是空，直接返回
         // 是空的话，那就new 一个Logger日志器
         
-        LogLevel global_log_level = String2LogLevel(Config::GetGlobalConfig()->getLogLevel());
+        LogLevel global_log_level = String2LogLevel(Config::GetGlobalConfig()->GetLogLevel());
         printf("Init log level [%s]\n", LogLevel2String(global_log_level).c_str());
         // printf("global_log_level is  [%d]\n", global_log_level);// test codes!
         
@@ -106,7 +106,7 @@ namespace rocket{
     }
     void Logger::log(){
         ScopeMutex<Mutex> lock(this->m_mutex);
-        lock.lock();
+        // lock.lock();
         // 为什么不直接用 m_mutex.lock 和 unlock呢？因为这次复合RAII
         // 我试过了，直接用m_mutex也是ok的哈！
 
